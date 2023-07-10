@@ -221,7 +221,7 @@ mod data {
             planet_id: 40000002,
             resource_info: resource_info
         };
-        let result = get_planet(40000002);
+        let result = PLANETS.get(&40000002);
         assert_eq!(Some(&planet), result);
     }
 
@@ -229,10 +229,6 @@ mod data {
         let planets_data = std::fs::read_to_string("data/planet_exploit_resource.json")?;
         let planets: HashMap<i64, Planet> = serde_json::from_str(&planets_data)?;
         Ok(planets)
-    }
-
-    pub fn get_planet(key: i64) -> Option<&'static Planet> {
-        PLANETS.get(&key)
     }
 
     #[test]
