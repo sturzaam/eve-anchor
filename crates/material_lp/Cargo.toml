@@ -32,4 +32,5 @@ rstest = "0.17.0"
 float_eq = "1.0"
 
 [build-dependencies]
-glob = "0.3"
+reqwest = { version = "0.11", features = ["blocking"] }
+rayon = "1.5"

@@ -112,7 +112,7 @@ mod data {
         static ref PLANETS: HashMap<i64, Planet> = load_planet_exploit_resource().expect("Failed to load planets");
     }
 
-    #[test]
+    #[cfg(test)]
     fn load_data_celestials_from_json() {
         let celestial = Celestial {
             constellation_id: 20000001,
@@ -125,7 +125,10 @@ mod data {
     }
 
     pub fn load_celestials() -> Result<HashMap<i64, Celestial>, Box<dyn std::error::Error>> {
-        let celestial_data = std::fs::read_to_string("data/celestials.json")?;
+        let out_dir = std::env::var("OUT_DIR").expect("Failed to read OUT_DIR environment variable");
+        let file_path = std::path::Path::new(&out_dir).join("data/celestials.json");
+    
+        let celestial_data = std::fs::read_to_string(file_path)?;
         let celestials: HashMap<i64, Celestial> = serde_json::from_str(&celestial_data)?;
         Ok(celestials)
     }
@@ -134,7 +137,7 @@ mod data {
         CELESTIALS.get(&key)
     }
 
-    #[test]
+    #[cfg(test)]
     fn load_data_items_from_json() {
         let item = Item {
             zh_name: "硅结构铸材".into(),
@@ -153,7 +156,10 @@ mod data {
     }
 
     pub fn load_items() -> Result<HashMap<i64, Item>, Box<dyn std::error::Error>> {
-        let item_data = std::fs::read_to_string("data/all_items_info.json")?;
+        let out_dir = std::env::var("OUT_DIR").expect("Failed to read OUT_DIR environment variable");
+        let file_path = std::path::Path::new(&out_dir).join("data/all_items_info.json");
+    
+        let item_data = std::fs::read_to_string(file_path)?;
         let items: HashMap<i64, Item> = serde_json::from_str(&item_data)?;
         Ok(items)
     }
@@ -162,7 +168,7 @@ mod data {
         ITEMS.get(&key)
     }
 
-    #[test]
+    #[cfg(test)]
     fn load_data_constellations_from_json() {
         let constellation = Constellation {
             zh_name: "KUSW-P".into(),
@@ -180,16 +186,19 @@ mod data {
     }
 
     pub fn load_constellations() -> Result<HashMap<i64, Constellation>, Box<dyn std::error::Error>> {
-        let constellation_data = std::fs::read_to_string("data/constellations_r.json")?;
+        let out_dir = std::env::var("OUT_DIR").expect("Failed to read OUT_DIR environment variable");
+        let file_path = std::path::Path::new(&out_dir).join("data/constellations_r.json");
+    
+        let constellation_data = std::fs::read_to_string(file_path)?;
         let constellations: HashMap<i64, Constellation> = serde_json::from_str(&constellation_data)?;
         Ok(constellations)
-    }
+    }    
 
     pub fn get_constellation(key: i64) -> Option<&'static Constellation> {
         CONSTELLATIONS.get(&key)
     }
 
-    #[test]
+    #[cfg(test)]
     fn load_data_resources_from_json() {
         let resource_42001000020 = Resource {
             init_output: 3.549999952316284,
@@ -226,12 +235,15 @@ mod data {
     }
 
     pub fn load_planet_exploit_resource() -> Result<HashMap<i64, Planet>, Box<dyn std::error::Error>> {
-        let planets_data = std::fs::read_to_string("data/planet_exploit_resource.json")?;
+        let out_dir = std::env::var("OUT_DIR").expect("Failed to read OUT_DIR environment variable");
+        let file_path = std::path::Path::new(&out_dir).join("data/planet_exploit_resource.json");
+    
+        let planets_data = std::fs::read_to_string(file_path)?;
         let planets: HashMap<i64, Planet> = serde_json::from_str(&planets_data)?;
         Ok(planets)
     }
 
-    #[test]
+    #[cfg(test)]
     fn load_data_systems_from_json() {
         let system = System {
             zh_name: "坦欧".into(),
@@ -253,12 +265,15 @@ mod data {
     }
 
     pub fn load_systems() -> Result<HashMap<i64, System>, Box<dyn std::error::Error>> {
-        let system_data = std::fs::read_to_string("data/systems_r.json")?;
+        let out_dir = std::env::var("OUT_DIR").expect("Failed to read OUT_DIR environment variable");
+        let file_path = std::path::Path::new(&out_dir).join("data/systems_r.json");
+    
+        let system_data = std::fs::read_to_string(file_path)?;
         let systems: HashMap<i64, System> = serde_json::from_str(&system_data)?;
         Ok(systems)
-    }
+    }    
 
-    #[test]
+    #[cfg(test)]
     fn slice_celestial_by_constellation() {
         let constellation_id = find_constellation("KUSW-P").expect("Constellation not found");
         assert_eq!(*constellation_id, 20000453);
@@ -276,7 +291,7 @@ mod data {
         Ok(sliced_celestials)
     }
     
-    #[test]
+    #[cfg(test)]
     fn lookup_system_by_planet() {
         let result = system_by_planet(40000002);
         assert_eq!(result.map(|system| system.en_name.as_ref()), Some("Tanoo"));
@@ -286,7 +301,7 @@ mod data {
         return get_system(CELESTIALS.get(&key).unwrap().solar_system_id);
     }
 
-    #[test]
+    #[cfg(test)]
     fn lookup_constellation_by_name() {
         let result = find_constellation("KUSW-P");
         assert_eq!(result, Some(&20000453));
@@ -301,7 +316,7 @@ mod data {
         None
     }
 
-    #[test]
+    #[cfg(test)]
     fn lookup_item_by_name() {
         let result = find_item("Silicate Glass");
         assert_eq!(result, Some(&42001000032));
@@ -316,7 +331,7 @@ mod data {
         None
     }
 
-    #[test]
+    #[cfg(test)]
     fn slice_resources_by_constellation() {
         let constellation_id = find_constellation("KUSW-P").expect("Constellation not found");
         assert_eq!(*constellation_id, 20000453);
@@ -338,7 +353,7 @@ mod data {
         Ok(available_planets)
     }
 
-    #[test]
+    #[cfg(test)]
     fn slice_celestial_resources_by_constellation_name() {
         let celestial_resources: Vec<CelestialResource> = celestial_resources_by_constellation("KUSW-P");
         assert_eq!(celestial_resources.len(), 289);

@@ -1,25 +1,37 @@
 use std::env;
 use std::fs;
+use std::fs::File;
+use std::io::copy;
 use std::path::PathBuf;
-use glob::glob;
+use reqwest::Url;
 
 fn main() {
-    // Get the output directory (OUT_DIR)
     let out_dir = env::var("OUT_DIR").expect("Failed to read OUT_DIR environment variable");
     let out_dir = PathBuf::from(out_dir);
+    let auxilus_view = "https://auxilus.xyz/eve-echoes-data/download?view=/eve-echoes-data/";
+    let data = vec![
+        "all_items_info.json",
+        "celestials.json",
+        "constellations_r.json",
+        "planet_exploit_resource.json",
+        "systems_r.json",
+    ];
+    let data_dir = out_dir.join("data");
 
-    // Specify the pattern for JSON files
-    let pattern = "data/*.json";
+    fs::create_dir_all(&data_dir).expect("Failed to create data directory");
 
-    // Find all files matching the pattern
-    let json_files: Vec<PathBuf> = glob(pattern)
-        .expect("Failed to read glob pattern")
-        .filter_map(Result::ok)
-        .collect();
+    for filename in data {
+        let file_url = format!("{}{}", auxilus_view, filename);
+        let file_path = out_dir.join(&filename);
+        let dest_path = data_dir.join(&filename);
 
-    // Copy each JSON file to the output directory (OUT_DIR)
-    for file in json_files {
-        let destination = out_dir.join(file.file_name().unwrap());
-        fs::copy(&file, &destination).expect("Failed to copy file");
+        if !dest_path.exists() {
+            let mut response = reqwest::blocking::get(Url::parse(&file_url).unwrap())
+                .expect("Failed to send request");
+            let mut file = File::create(&file_path).expect("Failed to create file");
+
+            copy(&mut response, &mut file).expect("Failed to download file");
+            fs::rename(&file_path, &dest_path).expect("Failed to move file to data directory");
+        }
     }
 }
