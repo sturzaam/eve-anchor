@@ -8,7 +8,7 @@ use anyhow::{Context, Result};
 fn clipboard_doesnt_exist() -> Result<(), Box<dyn std::error::Error>> {
     let mut clipboard = Clipboard::new().context("Failed to create clipboard")?;
     let _ = clipboard.set_text("");
-    let mut cmd = Command::cargo_bin("materials")?;
+    let mut cmd = Command::cargo_bin("material_lp")?;
     cmd.arg("-D").arg("7").arg("-C").arg("KUSW-P=2");
     cmd.assert()
         .failure()
