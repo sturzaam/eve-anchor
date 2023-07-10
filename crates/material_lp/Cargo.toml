@@ -10,9 +10,7 @@ homepage = "https://github.com/you/grrs"
 repository = "https://github.com/you/grrs"
 keywords = ["cli", "optimization", "eve-echoes"]
 categories = ["command-line-utilities"]
-include = [
-    "**/data/*.json",
-]
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -32,3 +30,6 @@ predicates = "3.0.3"
 assert_fs = "1.0.13"
 rstest = "0.17.0"
 float_eq = "1.0"
+
+[build-dependencies]
+glob = "0.3"
