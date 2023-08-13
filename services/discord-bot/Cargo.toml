@@ -1,0 +1,23 @@
+[package]
+name = "eve-anchor"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+anyhow = "1.0.66"
+shuttle-serenity = "0.21.0"
+shuttle-runtime = "0.21.0"
+serenity = { version = "0.11.5", default-features = false, features = ["client", "gateway", "rustls_backend", "model"] }
+shuttle-secrets = "0.21.0"
+tokio = "1.26.0"
+tracing = "0.1.37"
+material_lp = "0.1.0"
+dotenv = "0.15.0"
+good_lp = "0.3"
+prettytable-rs = "^0.10"
+num-format = "0.4"
+
+[build-dependencies]
+reqwest = { version = "0.11", features = ["blocking"] }
+rayon = "1.5"
