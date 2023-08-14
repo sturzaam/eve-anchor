@@ -191,7 +191,6 @@ fn format_assert_planets_leq() {
 macro_rules! assert_materials_in_constellations {
     ($materials:ident, $constellations:ident) => {
         let mut panic_messages = Vec::new();
-        let mut found_in_any_constellation = false;
 
         for material in $materials.iter() {
             let mut material_found = false;
@@ -205,7 +204,6 @@ macro_rules! assert_materials_in_constellations {
 
                 if !matching_celestial_resources.is_empty() {
                     material_found = true;
-                    found_in_any_constellation = true;
                     break; // No need to check other constellations for this material
                 }
             }
@@ -221,7 +219,7 @@ macro_rules! assert_materials_in_constellations {
             }
         }
 
-        if !found_in_any_constellation {
+        if !panic_messages.is_empty() {
             let joined_panic_message = panic_messages.join("\n");
             panic!("{}", joined_panic_message);
         }
@@ -234,6 +232,12 @@ fn panic_when_materials_not_in_constellations() {
         Material {
             resource_type_id: 42001000007,
             name: "Lucent Compound".into(),
+            quantity: 0,
+            valuation: 0.0
+        },
+        Material {
+            resource_type_id: 42001000000,
+            name: "Lustering Alloy".into(),
             quantity: 0,
             valuation: 0.0
         }
