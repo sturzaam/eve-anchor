@@ -1,7 +1,10 @@
+use std::panic;
 use std::sync::{Arc, Mutex};
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use crate::lib::{parse_requirements, solve_resource_problem, parse_constellations, solution_table, material_table};
 use material_lp::{Material};
+use material_lp::assert_materials_in_constellations;
+use material_lp::data::celestial_resources_by_constellation;
 
 pub struct Bot {
     pub materials: Arc<Mutex<Vec<Material>>>,
@@ -91,13 +94,15 @@ impl Bot {
         };
         let clean_type = dirty_type.trim_matches('\"');
         let requirements_string = requirements.unwrap().value.unwrap().to_string();
-        let mut material_requirements: Vec<Material> = Vec::new();
+        let mut materials: Vec<Material> = Vec::new();
+        let constellations = self.constellations.lock().unwrap().clone();
+        materials = parse_requirements(requirements_string.clone())
+            .expect("Failed to parse requirements.");
+
         match clean_type {
             "ship" => {
-                material_requirements = parse_requirements(requirements_string.clone())
-                    .expect("Failed to parse ship requirements.");
                 self.clear_ship_materials();
-                material_requirements
+                materials
                     .iter()
                     .for_each(|material| self.add_ship_material(material.clone()));
                 format!("{} Ship materials configured",
@@ -105,10 +110,8 @@ impl Bot {
                 )
             },
             "structure" => {
-                material_requirements = parse_requirements(requirements_string.clone())
-                    .expect("Failed to parse material requirements.");
                 self.clear_structure_materials();
-                material_requirements
+                materials
                     .iter()
                     .for_each(|material| self.add_structure_material(material.clone()));
                 format!("{} Structure materials configured",
@@ -116,10 +119,8 @@ impl Bot {
                 )
             },
             "corporation" => {
-                material_requirements = parse_requirements(requirements_string.clone())
-                    .expect("Failed to parse corporation requirements.");
                 self.clear_corporation_materials();
-                material_requirements
+                materials
                     .iter()
                     .for_each(|material| self.add_corporation_material(material.clone()));
                 format!("{} Corporation materials configured",
@@ -127,10 +128,8 @@ impl Bot {
             )
             },
             "material" => {
-                material_requirements = parse_requirements(requirements_string.clone())
-                    .expect("Failed to parse material requirements.");
                 self.clear_materials();
-                material_requirements
+                materials
                     .iter()
                     .for_each(|material| self.add_material(material.clone()));
                 format!("{} Materials configured",
@@ -181,22 +180,22 @@ impl Bot {
             None => "material".to_string(),
         };
         let clean_type = dirty_type.trim_matches('\"');
-        let mut material_requirements: Vec<Material> = Vec::new();
+        let mut materials: Vec<Material> = Vec::new();
         match clean_type {
             "ship" => {
-                material_requirements = self.ship_materials.lock().unwrap().clone();
+                materials = self.ship_materials.lock().unwrap().clone();
             },
             "structure" => {   
-                material_requirements = self.structure_materials.lock().unwrap().clone();
+                materials = self.structure_materials.lock().unwrap().clone();
             },
             "corporation" => {
-                material_requirements = self.corporation_materials.lock().unwrap().clone();
+                materials = self.corporation_materials.lock().unwrap().clone();
             },
             _ => {
-                material_requirements = self.materials.lock().unwrap().clone();
+                materials = self.materials.lock().unwrap().clone();
             }
         }
-        material_table(material_requirements)
+        material_table(materials)
     }
     
     pub fn handle_solver(&self, command: ApplicationCommandInteraction) -> String {
@@ -233,7 +232,7 @@ impl Bot {
             None => "material".to_string(),
         };
         let clean_type = dirty_type.trim_matches('\"');
-        let mut material_requirements: Vec<Material> = Vec::new();
+        let mut materials: Vec<Material> = Vec::new();
         let requirements = command
             .data
             .options
@@ -253,26 +252,34 @@ impl Bot {
         }
         match clean_type {
             "ship" => {
-                material_requirements = self.ship_materials.lock().unwrap().clone();
+                materials = self.ship_materials.lock().unwrap().clone();
             },
             "structure" => {   
-                material_requirements = self.structure_materials.lock().unwrap().clone();
+                materials = self.structure_materials.lock().unwrap().clone();
             },
             "corporation" => {
-                material_requirements = self.corporation_materials.lock().unwrap().clone();
+                materials = self.corporation_materials.lock().unwrap().clone();
             },
             _ => {
-                material_requirements = self.materials.lock().unwrap().clone();
+                materials = self.materials.lock().unwrap().clone();
             }
         }
-        let materials = material_requirements.clone();
+        let moved_materials = materials.clone();
         let constellations = self.constellations.lock().unwrap().clone();
-        let celestial_resource_values = solve_resource_problem(materials, days, constellations);
+        let validation = std::panic::catch_unwind(|| {
+            assert_materials_in_constellations!(materials, constellations);
+        });
+        if validation.is_err() {
+            let error = validation.unwrap_err();
+            let panic_message = error.downcast_ref::<String>().unwrap();
+            return panic_message.to_string();
+        }
+        let celestial_resource_values = solve_resource_problem(moved_materials, days, constellations);
         let mut response = solution_table(clean_constellation, celestial_resource_values);
         format!(
             "To maximize total value in constellation {} meeting the {} {} material requirements harvest the following:\n{}",
             clean_constellation,
-            material_requirements.clone().len(),
+            materials.clone().len(),
             clean_type,
             response,
         )

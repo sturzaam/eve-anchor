@@ -3,7 +3,6 @@ use core::str::Split;
 use serenity::model::prelude::application_command::CommandDataOption;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use prettytable::{Table, Row, Cell, format::Alignment, format::FormatBuilder,row};
-use num_format::{Locale, ToFormattedString};
 use good_lp::solvers::Solution;
 use material_lp::{
     Material, map_objective, 
