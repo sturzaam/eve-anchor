@@ -1,4 +1,3 @@
-use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::copy;
@@ -6,7 +5,7 @@ use std::path::PathBuf;
 use reqwest::Url;
 
 fn main() {
-    let out_dir = env::var("OUT_DIR").expect("Failed to read OUT_DIR environment variable");
+    let out_dir = "./target".to_string();
     let out_dir = PathBuf::from(out_dir);
     let auxilus_view = "https://auxilus.xyz/eve-echoes-data/download?view=/eve-echoes-data/";
     let data = vec![
