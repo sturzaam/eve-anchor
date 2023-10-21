@@ -1,58 +1,8 @@
-use tabled::{Tabled};
 use good_lp::variable::ProblemVariables;
 use good_lp::{default_solver, variable, variables, Expression, Solution, SolverModel, Variable};
-use crate::data::{get_constellation, get_celestial, system_by_planet, get_item};
-use crate::data::{CelestialResource};
-use std::cmp::Ordering;
+use crate::data::get_item;
+use crate::resource::CelestialResource;
 use std::collections::HashMap;
-
-#[derive(Tabled)]
-pub struct SolutionTable {
-    pub constellation: Box<str>,
-    pub system: Box<str>,
-    pub planet: i64,
-    pub resource: Box<str>,
-    pub array_quantity: f64,
-    pub init_output: f64,
-}
-
-#[derive(Default)]
-pub struct Required {
-    pub lustering_allow: f64,
-    pub sheen_compound: f64,
-    pub gleaming_alloy: f64,
-    pub motley_compound: f64,
-    pub precious_alloy: f64,
-    pub condensed_alloy: f64,
-    pub fiber_composite: f64,
-    pub lucent_compound: f64,
-    pub opulent_compound: f64,
-    pub glossy_compound: f64,
-    pub reactive_gas: f64,
-    pub noble_gas: f64,
-    pub crystal_compound: f64,
-    pub dark_compound: f64,
-    pub base_metals: f64,
-    pub heavy_metals: f64,
-    pub toxic_metals: f64,
-    pub industrial_fibers: f64,
-    pub noble_metals: f64,
-    pub reactive_metals: f64,
-    pub supertensile_plastics: f64,
-    pub polyaramids: f64,
-    pub construction_blocks: f64,
-    pub nanites: f64,
-    pub coolant: f64,
-    pub condensates: f64,
-    pub silicate_glass: f64,
-    pub smartfab_units: f64,
-    pub suspended_plasma: f64,
-    pub heavy_water: f64,
-    pub plasmoids: f64,
-    pub liquid_ozone: f64,
-    pub ionic_solutions: f64,
-    pub oxygen_isotopes: f64,
-}
 
 #[derive(Default)]
 pub struct Value {
@@ -101,27 +51,27 @@ pub struct ResourceHarvestProblem {
     
     total_value: Expression,
     total_array: Expression,
-    consumed_constellation: HashMap<i64, Expression>,
+    consumed_outpost: HashMap<String, Expression>,
     consumed_planet: HashMap<i64, Expression>,
     resource_output: HashMap<i64, Expression>,
-    pub available_constellation: HashMap<i64, f64>,
+    pub available_outpost: HashMap<String, f64>,
     pub available_planet: HashMap<i64, f64>,
     pub minimum_output: HashMap<i64, f64>,
 }
 
 impl ResourceHarvestProblem {
     pub fn new(
-        available_constellation: HashMap<i64, f64>,
+        available_outpost: HashMap<String, f64>,
         available_planet: HashMap<i64, f64>,
         mut minimum_output: HashMap<i64, f64>,
         value: Value,
-        available_outposts: i32,
         days: f64,
     ) -> ResourceHarvestProblem {
-        let available_array = available_constellation.values().copied().sum();
+        let available_array = available_outpost.values().copied().sum();
         Self::add_fuel(
             42002000014, 13., 18000.,
-            days, available_outposts as f64,
+            days,
+            available_outpost.len() as f64,
             &mut minimum_output
         );
         ResourceHarvestProblem {
@@ -132,10 +82,10 @@ impl ResourceHarvestProblem {
 
             total_value: 0.into(),
             total_array: 0.into(),
-            consumed_constellation: HashMap::new(),
+            consumed_outpost: HashMap::new(),
             consumed_planet: HashMap::new(),
             resource_output: HashMap::new(),
-            available_constellation,
+            available_outpost,
             available_planet,
             minimum_output,
         }
@@ -146,10 +96,10 @@ impl ResourceHarvestProblem {
         gj_per_unit: f64,
         gj_needed: f64,
         days: f64,
-        available_outposts: f64,
+        to_fuel: f64,
         minimum_output: &mut HashMap<i64, f64>
     ) {
-        let quantity = gj_needed / gj_per_unit * 24. * days * available_outposts;
+        let quantity = gj_needed / gj_per_unit * 24. * days * to_fuel;
         minimum_output
             .entry(material_id)
             .and_modify(|value| *value += quantity)
@@ -161,8 +111,8 @@ impl ResourceHarvestProblem {
             .get(&resource.planet_id)
             .copied()
             .unwrap_or(22.);
-        let consumed_constellation = self.consumed_constellation
-            .entry(resource.constellation_id)
+        let consumed_outpost = self.consumed_outpost
+            .entry(resource.outpost_name.clone())
             .or_insert(0.into());
         let consumed_planet = self.consumed_planet
             .entry(resource.planet_id)
@@ -170,12 +120,11 @@ impl ResourceHarvestProblem {
         let resource_output = self.resource_output
             .entry(resource.resource_type_id)
             .or_insert(0.into());
-        let array_quantity = self.vars
-            .add(variable().min(0).max(planet_limit));
+        let array_quantity = self.vars.add(variable().min(0).max(planet_limit));
 
         self.total_value += get_resource_value(&resource, &self.value) * array_quantity * self.days * 24.;
         self.total_array += array_quantity;
-        *consumed_constellation += array_quantity;
+        *consumed_outpost += array_quantity;
         *consumed_planet += array_quantity;
         *resource_output += array_quantity * resource.init_output * self.days * 24.;
 
@@ -190,9 +139,9 @@ impl ResourceHarvestProblem {
             .with(self.total_array.eq(self.available_array))
             ;
 
-        for (constellation_id, consumed_constellation) in &self.consumed_constellation {
-            let available_constellation = self.available_constellation.get(&constellation_id).copied().unwrap_or(0.);
-            solution = solution.with(consumed_constellation.clone().leq(available_constellation));
+        for (outpost_name, consumed_outpost) in &self.consumed_outpost {
+            let available_outpost = self.available_outpost.get(outpost_name).copied().unwrap_or(0.);
+            solution = solution.with(consumed_outpost.clone().leq(available_outpost));
         }
 
         for (planet_id, consumed_planet) in &self.consumed_planet {
@@ -211,65 +160,6 @@ impl ResourceHarvestProblem {
 
         solution.solve().unwrap()
     }
-}
-
-pub fn solution_table(values: Vec<(&CelestialResource, f64)>) -> Vec<SolutionTable> {
-    let mut solution_table: Vec<SolutionTable> = Vec::new();
-
-    for (celestial_resource, value) in values.iter() {
-        if round_to_2_decimal_places(*value) == 0.0 {
-            continue;
-        }
-        
-        let constellation = get_constellation(celestial_resource.constellation_id)
-            .unwrap()
-            .en_name
-            .clone();
-        let system = system_by_planet(celestial_resource.planet_id)
-            .unwrap()
-            .en_name
-            .clone();
-        let planet = get_celestial(celestial_resource.planet_id)
-            .unwrap()
-            .celestial_index
-            .clone();
-        let resource = get_item(celestial_resource.resource_type_id)
-            .unwrap()
-            .en_name
-            .clone();
-        
-        let solution_table_entry = SolutionTable {
-            constellation: constellation.clone(),
-            system: system.clone(),
-            planet,
-            resource,
-            array_quantity: round_to_2_decimal_places(*value),
-            init_output: round_to_2_decimal_places(celestial_resource.init_output),
-        };
-
-        solution_table.push(solution_table_entry);
-    }
-
-    solution_table.sort_by(|a, b| {
-        let constellation_comparison = a.constellation.cmp(&b.constellation);
-        if constellation_comparison == Ordering::Equal {
-            let system_comparison = a.system.cmp(&b.system);
-            if system_comparison == Ordering::Equal {
-                a.planet.cmp(&b.planet)
-            } else {
-                system_comparison
-            }
-        } else {
-            constellation_comparison
-        }
-    });
-
-    solution_table
-}
-
-fn round_to_2_decimal_places(value: f64) -> f64 {
-    let multiplier = 100.0; // 10^2
-    (value * multiplier).round() / multiplier
 }
 
 pub fn get_resource_value(resource: &CelestialResource, value: &Value) -> f64 {

@@ -1,20 +1,158 @@
 mod objective {
-    use serde::{Deserialize, Serialize};
-    use serde_json::Value;
     use std::collections::HashMap;
-    use arboard::Clipboard;
-    use anyhow::Context;
-    use crate::data::find_item;
-
-    #[derive(Debug, Clone, PartialEq)]
-    pub struct Material {
-        pub resource_type_id: i64,
-        pub name: Box<str>,
-        pub quantity: i64,
-        pub valuation: f64,
+    use crate::problem::{Value};
+    use crate::data::{
+        PLANETS,
+        find_item,
+        slice_celestials
+    };
+    use crate::resource::{Material, CelestialResource, celestial_resources_by_outpost};
+    use crate::structure::Outpost;
+    
+    pub fn map_objective(materials: Vec<Material>) -> (HashMap<i64, f64>, Value) {
+        let mut minimum_output: HashMap<i64, f64> = HashMap::new();
+        let mut value = Value::default();
+    
+        for material in materials {
+            let entry = minimum_output.entry(material.resource_type_id).or_insert(0.0);
+            *entry += material.quantity as f64;
+            match material.name.as_ref() {
+                "Lustering Alloy" => {
+                    value.lustering_allow = material.valuation / material.quantity as f64;
+                },
+                "Sheen Compound" => {
+                    value.sheen_compound = material.valuation / material.quantity as f64;
+                },
+                "Gleaming Alloy" => {
+                    value.gleaming_alloy = material.valuation / material.quantity as f64;
+                },
+                "Motley Compound" => {
+                    value.motley_compound = material.valuation / material.quantity as f64;
+                },
+                "Precious Alloy" => {
+                    value.precious_alloy = material.valuation / material.quantity as f64;
+                },
+                "Condensed Alloy" => {
+                    value.condensed_alloy = material.valuation / material.quantity as f64;
+                },
+                "Fiber Composite" => {
+                    value.fiber_composite = material.valuation / material.quantity as f64;
+                },
+                "Lucent Compound" => {
+                    value.lucent_compound = material.valuation / material.quantity as f64;
+                },
+                "Opulent Compound" => {
+                    value.opulent_compound = material.valuation / material.quantity as f64;
+                },
+                "Glossy Compound" => {
+                    value.glossy_compound = material.valuation / material.quantity as f64;
+                },
+                "Reactive Gas" => {
+                    value.reactive_gas = material.valuation / material.quantity as f64;
+                },
+                "Noble Gas" => {
+                    value.noble_gas = material.valuation / material.quantity as f64;
+                },
+                "Crystal Compound" => {
+                    value.crystal_compound = material.valuation / material.quantity as f64;
+                },
+                "Dark Compound" => {
+                    value.dark_compound = material.valuation / material.quantity as f64;
+                },
+                "Base Metals" => {
+                    value.base_metals = material.valuation / material.quantity as f64;
+                },
+                "Heavy Metals" => {
+                    value.heavy_metals = material.valuation / material.quantity as f64;
+                },
+                "Toxic Metals" => {
+                    value.toxic_metals = material.valuation / material.quantity as f64;
+                },
+                "Industrial Fibers" => {
+                    value.industrial_fibers = material.valuation / material.quantity as f64;
+                },
+                "Noble Metals" => {
+                    value.noble_metals = material.valuation / material.quantity as f64;
+                },
+                "Reactive Metals" => {
+                    value.reactive_metals = material.valuation / material.quantity as f64;
+                },
+                "Supertensile Plastics" => {
+                    value.supertensile_plastics = material.valuation / material.quantity as f64;
+                },
+                "Polyaramids" => {
+                    value.polyaramids = material.valuation / material.quantity as f64;
+                },
+                "Construction Blocks" => {
+                    value.construction_blocks = material.valuation / material.quantity as f64;
+                },
+                "Nanites" => {
+                    value.nanites = material.valuation / material.quantity as f64;
+                },
+                "Coolant" => {
+                    value.coolant = material.valuation / material.quantity as f64;
+                },
+                "Condensates" => {
+                    value.condensates = material.valuation / material.quantity as f64;
+                },
+                "Silicate Glass" => {
+                    value.silicate_glass = material.valuation / material.quantity as f64;
+                },
+                "Smartfab Units" => {
+                    value.smartfab_units = material.valuation / material.quantity as f64;
+                },
+                "Suspended Plasma" => {
+                    value.suspended_plasma = material.valuation / material.quantity as f64;
+                },
+                "Heavy Water" => {
+                    value.heavy_water = material.valuation / material.quantity as f64;
+                },
+                "Plasmoids" => {
+                    value.plasmoids = material.valuation / material.quantity as f64;
+                },
+                "Liquid Ozone" => {
+                    value.liquid_ozone = material.valuation / material.quantity as f64;
+                },
+                "Ionic Solutions" => {
+                    value.ionic_solutions = material.valuation / material.quantity as f64;
+                },
+                "Oxygen Isotopes" => {
+                    value.oxygen_isotopes = material.valuation / material.quantity as f64;
+                },
+                _ => ()//panic!("Invalid attribute name: {}", material.name.as_ref()),
+            }
+        }
+        
+        (minimum_output, value)
     }
-
-
+    
+    pub fn map_outpost(outposts: Vec<Outpost>) -> (HashMap<String, f64>, HashMap<i64, f64>, Vec<CelestialResource>) {
+        let mut available_outpost: HashMap<String, f64> = HashMap::new();
+        let mut available_planet: HashMap<i64, f64> = HashMap::new();
+        let mut available_celestial_resource: Vec<CelestialResource> = Vec::new();
+        
+        for outpost in outposts {
+            let available_planets = 12.; //TODO: derive from capsuleer
+            let available_array = 22.; //TODO: derive from capsuleer
+    
+            let outpost_name = outpost.name.clone();
+            match available_planets_by_outpost(outpost.clone(), available_array) {
+                Ok(planets) => {
+                    *available_outpost
+                        .entry(outpost_name) // Use the cloned name
+                        .or_insert(available_array * available_planets) = available_array * available_planets;
+                    available_planet.extend(planets);
+                    available_celestial_resource.extend(celestial_resources_by_outpost(outpost))
+                }
+                Err(err) => {
+                    println!("Error: {}", err);
+                }
+            }
+        }
+        
+        (available_outpost, available_planet, available_celestial_resource)
+    }
+    
     pub fn push_material(line: &str, materials: &mut Vec<Material>) {
         let material_split: Vec<&str> = line.split("\t").collect();
         if material_split.len() >= 4 {
@@ -28,15 +166,12 @@ mod objective {
             );
         }
     }
-    
 
-    pub fn parse_decomposed_list() ->  Result<Vec::<Material>, anyhow::Error> {
+    pub fn parse_decomposed_list(text: &str) ->  Result<Vec::<Material>, anyhow::Error> {
         let expected_header = "ID\tNames\tQuantity\tValuation ";
         let mut materials = Vec::<Material>::new();
-        let mut clipboard = Clipboard::new().context("Failed to create clipboard.")?;
-        let text = clipboard.get_text().context("Failed to get clipboard text.")?;
         let mut lines = text.lines();
-
+    
         if let Some(first_line) = lines.next() {
             if first_line != expected_header {
                 return Err(anyhow::anyhow!("Invalid header line.").into());
@@ -49,9 +184,18 @@ mod objective {
         }
         Ok(materials)
     }
+
+    pub fn available_planets_by_outpost(outpost: Outpost, number: f64) -> Result<HashMap<i64, f64>, Box<dyn std::error::Error>> {
+        let celestials = slice_celestials(outpost.constellation_id).expect("Failed to slice celestials");
+        let available_planets: HashMap<i64, f64> = PLANETS
+            .iter()
+            .filter(|(key, _)| celestials.contains_key(*key))
+            .map(|(key, _)| (*key, number)) //TODO: derive from capsuleer
+            .collect();
+
+        Ok(available_planets)
+    }
 }
 
 
-pub use objective::push_material;
-pub use objective::parse_decomposed_list;
-pub use objective::Material;
+pub use objective::{map_objective, map_outpost, parse_decomposed_list, push_material};
