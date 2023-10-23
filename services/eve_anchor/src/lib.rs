@@ -5,18 +5,15 @@ use std::fs::File;
 use std::io::{Read};
 use std::path::Path;
 
-use std::cmp::Ordering;
+
 use core::str::Split;
 use serenity::model::prelude::application_command::CommandDataOption;
-use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
-use prettytable::{Table, Row, Cell, format::Alignment, format::FormatBuilder,row};
-use good_lp::solvers::Solution;
+
+
 use material_lp::{
-    objective, solve,
-    resource::{Material, CelestialResource},
-    data::{find_item, get_item, find_constellation, get_celestial, system_by_planet},
-    problem::{ResourceHarvestProblem},
-    structure::{Capsuleer, Outpost, Corporation, Alliance},
+    resource::{Material},
+    data::{find_item},
+    structure::{Outpost, Corporation},
 };
 
 pub fn load_outposts(file_path: &Path) -> Result<Vec<Outpost>, anyhow::Error> {

@@ -2,18 +2,18 @@ mod bot;
 
 use std::sync::{Arc, Mutex};
 use dotenv::dotenv;
-use anyhow::anyhow;
+
 use serenity::async_trait;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::application::command::{CommandOptionType};
-use serenity::model::channel::Message;
+
 use serenity::model::gateway::Ready;
 use serenity::model::prelude::GuildId;
 use serenity::prelude::*;
-use tracing::{error, info};
+use tracing::{info};
 
 use bot::{Bot};
-use material_lp::resource::{Material};
+
 
 
 #[async_trait]

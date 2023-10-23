@@ -1,13 +1,13 @@
-use std::path::{Path, PathBuf};
-use std::panic;
+use std::path::{PathBuf};
+
 use std::sync::{Arc, Mutex};
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use eve_anchor::{
     application_id, load_outposts, parse_requirements,
     report::{solution_table, outpost_table, material_table}
 };
-use material_lp::{create_outpost, solve, assert_materials_available};
-use material_lp::resource::{Material, celestial_resources_by_outpost};
+use material_lp::{create_outpost, solve};
+use material_lp::resource::{Material};
 
 pub struct Bot {
     pub materials: Arc<Mutex<Vec<Material>>>,
@@ -144,7 +144,7 @@ impl Bot {
             None => "material".to_string(),
         };
         let clean_type = dirty_type.trim_matches('\"');
-        let mut materials: Vec<Material> = Vec::new();
+        let _materials: Vec<Material> = Vec::new();
         match clean_type {
             "ship" => {
                 material_table(self.ship_materials.lock().unwrap().clone())
@@ -174,7 +174,7 @@ impl Bot {
         let file_name = PathBuf::from(format!("./target/outpost/{}.bin", application_id()));
         let outposts = load_outposts(&file_name).unwrap();
         let values = solve(outposts, moved_materials, days);
-        let mut response = solution_table(outpost_name.clone(), values);
+        let response = solution_table(outpost_name.clone(), values);
         format!(
             "To maximize total value for {} meeting the {} {} material requirements harvest the following:\n{}",
             outpost_name,
@@ -190,7 +190,7 @@ impl Bot {
         let capsuleer_name = Self::option_string(&command, "capsuleer_name");
         let corporation_name = Self::option_string(&command, "corporation_name");
         let alliance_name = Self::option_string(&command, "alliance_name");
-        let key = std::env::var("APP_ID");
+        let _key = std::env::var("APP_ID");
     
         let outpost = create_outpost(
             &outpost_name,
@@ -237,7 +237,7 @@ impl Bot {
             .expect("Option value is not a float")
     }
 
-    fn option_type(&self, interaction: &ApplicationCommandInteraction, type_option: &str) -> Vec<Material> {
+    fn option_type(&self, _interaction: &ApplicationCommandInteraction, type_option: &str) -> Vec<Material> {
         match type_option {
             "ship" => self.ship_materials.lock().unwrap().clone(),
             "structure" => self.structure_materials.lock().unwrap().clone(),

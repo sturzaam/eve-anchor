@@ -1,11 +1,11 @@
-use std::env;
+
 use std::fs;
 use std::fs::File;
 use std::io::copy;
 use std::path::PathBuf;
 use reqwest::Url;
-use std::fs::OpenOptions;
-use std::io::Write;
+
+
 
 fn main() {
     let out_dir = "./target".to_string();
