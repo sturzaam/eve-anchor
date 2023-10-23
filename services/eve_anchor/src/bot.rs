@@ -1,17 +1,19 @@
+use std::path::{Path, PathBuf};
 use std::panic;
 use std::sync::{Arc, Mutex};
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
-use crate::lib::{parse_requirements, solve_resource_problem, parse_constellations, solution_table, material_table};
-use material_lp::{Material};
-use material_lp::assert_materials_in_constellations;
-use material_lp::data::celestial_resources_by_constellation;
+use eve_anchor::{
+    application_id, load_outposts, parse_requirements,
+    report::{solution_table, outpost_table, material_table}
+};
+use material_lp::{create_outpost, solve, assert_materials_available};
+use material_lp::resource::{Material, celestial_resources_by_outpost};
 
 pub struct Bot {
     pub materials: Arc<Mutex<Vec<Material>>>,
     pub ship_materials: Arc<Mutex<Vec<Material>>>,
     pub structure_materials: Arc<Mutex<Vec<Material>>>,
     pub corporation_materials: Arc<Mutex<Vec<Material>>>,
-    pub constellations: Arc<Mutex<Vec<(String, i32)>>>,
 }
 
 impl Bot {
@@ -21,7 +23,6 @@ impl Bot {
             ship_materials: Arc::new(Mutex::new(Vec::new())),
             structure_materials: Arc::new(Mutex::new(Vec::new())),
             corporation_materials: Arc::new(Mutex::new(Vec::new())),
-            constellations: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
@@ -65,16 +66,6 @@ impl Bot {
         corporation_materials.clear();
     }
 
-    pub fn add_constellation(&self, constellation: (String, i32)) {
-        let mut constellations = self.constellations.lock().unwrap();
-        constellations.push(constellation);
-    }
-
-    pub fn clear_constellations(&self) {
-        let mut constellations = self.constellations.lock().unwrap();
-        constellations.clear();
-    }
-
     pub fn handle_config(&self, command: ApplicationCommandInteraction) -> String {
         let requirements = command
             .data
@@ -95,7 +86,6 @@ impl Bot {
         let clean_type = dirty_type.trim_matches('\"');
         let requirements_string = requirements.unwrap().value.unwrap().to_string();
         let mut materials: Vec<Material> = Vec::new();
-        let constellations = self.constellations.lock().unwrap().clone();
         materials = parse_requirements(requirements_string.clone())
             .expect("Failed to parse requirements.");
 
@@ -142,33 +132,7 @@ impl Bot {
         }
     }
 
-    pub fn handle_constellations(&self, command: ApplicationCommandInteraction) -> String {
-        let requirements = command
-            .data
-            .options
-            .iter()
-            .find(|opt| opt.name == "requirements")
-            .cloned();
-        let mut response = "".to_owned();
-        self.clear_constellations();
-        if let Some(constellations) = match parse_constellations(requirements.clone()) {
-            Ok(constellations) => Some(constellations),
-            Err(err) => {
-                eprintln!("Failed to parse constellations: {}", err);
-                response = format!("Failed to parse constellations: {}", err);
-                None
-            }
-        } {
-            for constellation in constellations {
-                self.add_constellation(constellation.clone());
-            }
-            "Constellations configured".to_owned()
-        } else {
-            response.to_owned()
-        }
-    }
-
-    pub fn handle_material(&self, command: ApplicationCommandInteraction) -> String {
+    pub fn handle_report(&self, command: ApplicationCommandInteraction) -> String {
         let type_option = command
             .data
             .options
@@ -183,105 +147,102 @@ impl Bot {
         let mut materials: Vec<Material> = Vec::new();
         match clean_type {
             "ship" => {
-                materials = self.ship_materials.lock().unwrap().clone();
+                material_table(self.ship_materials.lock().unwrap().clone())
             },
             "structure" => {   
-                materials = self.structure_materials.lock().unwrap().clone();
+                material_table(self.structure_materials.lock().unwrap().clone())
             },
             "corporation" => {
-                materials = self.corporation_materials.lock().unwrap().clone();
+                material_table(self.corporation_materials.lock().unwrap().clone())
+            },
+            "outpost" => {
+                let file_name = PathBuf::from(format!("./target/outpost/{}.bin", application_id()));
+                outpost_table(load_outposts(&file_name).unwrap())
             },
             _ => {
-                materials = self.materials.lock().unwrap().clone();
+                material_table(self.materials.lock().unwrap().clone())
             }
         }
-        material_table(materials)
     }
     
     pub fn handle_solver(&self, command: ApplicationCommandInteraction) -> String {
-        let day_option = command
-            .data
-            .options
-            .iter()
-            .find(|opt| opt.name == "days")
-            .cloned();
-        let days: f64 = day_option.unwrap()
-            .value
-            .unwrap()
-            .as_f64()
-            .unwrap();
-        let constellation_option = command
-            .data
-            .options
-            .iter()
-            .find(|opt| opt.name == "constellation")
-            .cloned();
-        let dirty_constellation = match constellation_option {
-            Some(c) => c.value.unwrap().to_string(),
-            None => "material".to_string(),
-        };
-        let clean_constellation = dirty_constellation.trim_matches('\"');
-        let type_option = command
-            .data
-            .options
-            .iter()
-            .find(|opt| opt.name == "type")
-            .cloned();
-        let dirty_type = match type_option {
-            Some(m) => m.value.unwrap().to_string(),
-            None => "material".to_string(),
-        };
-        let clean_type = dirty_type.trim_matches('\"');
-        let mut materials: Vec<Material> = Vec::new();
-        let requirements = command
-            .data
-            .options
-            .iter()
-            .find(|opt| opt.name == "requirements")
-            .cloned();
-        match requirements {
-            Some(requirements) => {
-                let requirements_string = Some(requirements).unwrap().value.unwrap().to_string();
-                self.clear_materials();
-                parse_requirements(requirements_string)
-                    .expect("Failed to parse requirements.")
-                    .iter()
-                    .for_each(|material| self.add_material(material.clone()));
-            },
-            None => (),
-        }
-        match clean_type {
-            "ship" => {
-                materials = self.ship_materials.lock().unwrap().clone();
-            },
-            "structure" => {   
-                materials = self.structure_materials.lock().unwrap().clone();
-            },
-            "corporation" => {
-                materials = self.corporation_materials.lock().unwrap().clone();
-            },
-            _ => {
-                materials = self.materials.lock().unwrap().clone();
-            }
-        }
+        let days: f64 = Self::option_float(&command, "days");
+        let outpost_name = Self::option_string(&command, "outpost_name");
+        let type_option = Self::option_string(&command, "type");
+        let materials = Self::option_type(&self, &command, &type_option);
         let moved_materials = materials.clone();
-        let constellations = self.constellations.lock().unwrap().clone();
-        let validation = std::panic::catch_unwind(|| {
-            assert_materials_in_constellations!(materials, constellations);
-        });
-        if validation.is_err() {
-            let error = validation.unwrap_err();
-            let panic_message = error.downcast_ref::<String>().unwrap();
-            return panic_message.to_string();
-        }
-        let celestial_resource_values = solve_resource_problem(moved_materials, days, constellations);
-        let mut response = solution_table(clean_constellation, celestial_resource_values);
+        let file_name = PathBuf::from(format!("./target/outpost/{}.bin", application_id()));
+        let outposts = load_outposts(&file_name).unwrap();
+        let values = solve(outposts, moved_materials, days);
+        let mut response = solution_table(outpost_name.clone(), values);
         format!(
-            "To maximize total value in constellation {} meeting the {} {} material requirements harvest the following:\n{}",
-            clean_constellation,
-            materials.clone().len(),
-            clean_type,
+            "To maximize total value for {} meeting the {} {} material requirements harvest the following:\n{}",
+            outpost_name,
+            materials.len(),
+            type_option,
             response,
         )
+    }
+
+    pub fn handle_outpost(&self, command: ApplicationCommandInteraction) -> String {
+        let outpost_name = Self::option_string(&command, "outpost_name");
+        let outpost_system = Self::option_string(&command, "outpost_system");
+        let capsuleer_name = Self::option_string(&command, "capsuleer_name");
+        let corporation_name = Self::option_string(&command, "corporation_name");
+        let alliance_name = Self::option_string(&command, "alliance_name");
+        let key = std::env::var("APP_ID");
+    
+        let outpost = create_outpost(
+            &outpost_name,
+            &outpost_system,
+            &capsuleer_name,
+            &corporation_name,
+            &alliance_name,
+            &application_id(),
+        );
+    
+        format!("Outpost: {}", outpost.name).to_owned()
+    }
+    
+    fn option_string(interaction: &ApplicationCommandInteraction, option_name: &str) -> String {
+        let option = interaction
+            .data
+            .options
+            .iter()
+            .find(|opt| opt.name == option_name)
+            .expect(&format!("Option: {} not found.", option_name));
+    
+        option
+            .value
+            .as_ref()
+            .expect("Option has no value")
+            .as_str()
+            .expect("Option value is not a string")
+            .to_string()
+    }
+    
+    fn option_float(interaction: &ApplicationCommandInteraction, option_name: &str) -> f64 {
+        let option = interaction
+            .data
+            .options
+            .iter()
+            .find(|opt| opt.name == option_name)
+            .expect("Option not found");
+    
+        option
+            .value
+            .as_ref()
+            .expect("Option has no value")
+            .as_f64()
+            .expect("Option value is not a float")
+    }
+
+    fn option_type(&self, interaction: &ApplicationCommandInteraction, type_option: &str) -> Vec<Material> {
+        match type_option {
+            "ship" => self.ship_materials.lock().unwrap().clone(),
+            "structure" => self.structure_materials.lock().unwrap().clone(),
+            "corporation" => self.corporation_materials.lock().unwrap().clone(),
+            _ => self.materials.lock().unwrap().clone(),
+        }
     }
 }

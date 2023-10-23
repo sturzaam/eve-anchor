@@ -8,15 +8,8 @@ use std::fs::OpenOptions;
 use std::io::Write;
 
 fn main() {
-    let out_dir = env::var("OUT_DIR").expect("Failed to read OUT_DIR environment variable");
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(".env")
-        .expect("Failed to open .env file");
-    writeln!(file, "OUT_DIR={}", out_dir).expect("Failed to write to .env file");
+    let out_dir = "./target".to_string();
     let out_dir = PathBuf::from(out_dir);
-    
     let auxilus_view = "https://auxilus.xyz/eve-echoes-data/download?view=/eve-echoes-data/";
     let data = vec![
         "all_items_info.json",

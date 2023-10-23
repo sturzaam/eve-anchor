@@ -1,4 +1,3 @@
-mod lib;
 mod bot;
 
 use std::sync::{Arc, Mutex};
@@ -14,7 +13,7 @@ use serenity::prelude::*;
 use tracing::{error, info};
 
 use bot::{Bot};
-use material_lp::{Material};
+use material_lp::resource::{Material};
 
 
 #[async_trait]
@@ -48,24 +47,52 @@ impl EventHandler for Bot {
                 })
                 .create_application_command(|command| { 
                     command
-                        .name("material")
-                        .description("Output the configured material type.")
+                        .name("report")
+                        .description("Output the report of type specified.")
                         .create_option(|option| {
                             option
                                 .name("type")
-                                .description("The type of requirements `ship`, `structure`, or `corporation`.")
+                                .description("The type of report `ship`, `structure`, `corporation`, or `outpost`.")
                                 .kind(CommandOptionType::String)
                                 .required(false)
                         })
                 })
                 .create_application_command(|command| { 
                     command
-                        .name("constellations")
-                        .description("Configure constraints for the placement of outposts.")
+                        .name("outpost")
+                        .description("Participcate by adding your outpost")
                         .create_option(|option| {
                             option
-                                .name("requirements")
-                                .description("The number of outposts per constellation as KEY=value.")
+                                .name("outpost_name")
+                                .description("The name of your outpost.")
+                                .kind(CommandOptionType::String)
+                                .required(true)
+                        })
+                        .create_option(|option| {
+                            option
+                                .name("outpost_system")
+                                .description("The system your outpost is anchored in.")
+                                .kind(CommandOptionType::String)
+                                .required(true)
+                        })
+                        .create_option(|option| {
+                            option
+                                .name("capsuleer_name")
+                                .description("The name of the capsuleer who anchored.")
+                                .kind(CommandOptionType::String)
+                                .required(true)
+                        })
+                        .create_option(|option| {
+                            option
+                                .name("corporation_name")
+                                .description("Your current corporation short.")
+                                .kind(CommandOptionType::String)
+                                .required(true)
+                        })
+                        .create_option(|option| {
+                            option
+                                .name("alliance_name")
+                                .description("Your corporation's alliance short.")
                                 .kind(CommandOptionType::String)
                                 .required(true)
                         })
@@ -83,8 +110,8 @@ impl EventHandler for Bot {
                         })
                         .create_option(|option| {
                             option
-                                .name("constellation")
-                                .description("The name of the constellation you are interested in.")
+                                .name("outpost_name")
+                                .description("The name of the outpost you are interested in.")
                                 .kind(CommandOptionType::String)
                                 .required(true)
                         })
@@ -92,13 +119,6 @@ impl EventHandler for Bot {
                             option
                                 .name("type")
                                 .description("The type of requirements ship, structure, or corporation.")
-                                .kind(CommandOptionType::String)
-                                .required(false)
-                        })
-                        .create_option(|option| {
-                            option
-                                .name("requirements")
-                                .description("The minimum requirements exported from Eve Echoes.")
                                 .kind(CommandOptionType::String)
                                 .required(false)
                         })
@@ -117,24 +137,21 @@ Welcome to `eve-anchor` Discord bot.
 - The minimum material requirements list should be configured with `/config` command.
   Simply paste the export list from the Eve Echoes industry to the `requirements` option.
   The `type` option can be used to configure a default requirements list.
-- The material requirements list can be returned with the `/material` command.
-  You are required to provide the `type` of list you wish to see: 
-    `ship`, `structure`, `corporation`(defaulted to `corporation`)
-- The configuration of outposts accross constellations should be configured with `/constellations` command.
-  Use `KEY=value` pairs for example: 
-  `FY6-NK=3 R2-BT6=3 E-ILCH=3`
-  This represents 3 outposts anchored in constellations `FY6-NK`, `R2-BT6`, and `E-ILCH`.
+- The material requirements list can be returned with the `/reports` command.
+  You are required to provide the `type` of report you wish to see: 
+    `ship`, `structure`, `corporation`, or `outpost` (defaulted to `material`)
+- The configuration of outposts for your corporation should be configured with `/outpost` command.
+    `outpost_name`, `system_name`, `capsuleer_name`, `corporation_name`, and `alliance_name` are all required.
 - When ready run the linear program to maximize total value with `/solve` command.
-  You are required to provide the number of `days` to harvest and the `constellation` you would like output.
+  You are required to provide the number of `days` to harvest and the `outpost_name` you would like output.
   Optionally you may provide:
-  - the `type` of material to maximize: `ship`, `structure`, `corporation`(defaulted to `corporation`)
-  - the `requirements` from your own list exported from Eve Echoes.  
+  - the `type` of material to maximize: `ship`, `structure`, `corporation`(defaulted to `material`)
 
 **Note**: depending on your choices and anchored outposts the response may timeout...
 Try again after 30 seconds as the results are cached...".to_owned(),
                 "config" => self.handle_config(command.clone()),
-                "constellations" => self.handle_constellations(command.clone()),
-                "material" => self.handle_material(command.clone()),
+                "outpost" => self.handle_outpost(command.clone()),
+                "report" => self.handle_report(command.clone()),
                 "solve" => self.handle_solver(command.clone()),
                 command => unreachable!("Unknown command: {}", command),
             };
@@ -168,7 +185,6 @@ async fn main() {
         ship_materials: Arc::new(Mutex::new(Vec::new())),
         structure_materials: Arc::new(Mutex::new(Vec::new())),
         corporation_materials: Arc::new(Mutex::new(Vec::new())),
-        constellations: Arc::new(Mutex::new(Vec::new())),
     };
     let mut client = Client::builder(&a_bot_token, intents)
         .event_handler(bot)
