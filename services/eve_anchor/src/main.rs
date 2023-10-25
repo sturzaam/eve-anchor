@@ -21,7 +21,7 @@ impl EventHandler for Bot {
     async fn ready(&self, ctx: Context, ready: Ready) {
         info!("{} is connected!", ready.user.name);
 
-        let guild_id = GuildId(1127975317529690243);
+        let guild_id = GuildId(866820253107093515);
 
         let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
             commands
@@ -132,20 +132,23 @@ impl EventHandler for Bot {
         if let Interaction::ApplicationCommand(command) = interaction {
             let response_content = match command.data.name.as_str() {
                 "help" => "
-Welcome to `eve-anchor` Discord bot. 
+Welcome to `eve-anchor` Discord bot.
 
-- The minimum material requirements list should be configured with `/config` command.
-  Simply paste the export list from the Eve Echoes industry to the `requirements` option.
-  The `type` option can be used to configure a default requirements list.
-- The material requirements list can be returned with the `/reports` command.
-  You are required to provide the `type` of report you wish to see: 
-    `ship`, `structure`, `corporation`, or `outpost` (defaulted to `material`)
-- The configuration of outposts for your corporation should be configured with `/outpost` command.
-    `outpost_name`, `system_name`, `capsuleer_name`, `corporation_name`, and `alliance_name` are all required.
-- When ready run the linear program to maximize total value with `/solve` command.
-  You are required to provide the number of `days` to harvest and the `outpost_name` you would like output.
-  Optionally you may provide:
-  - the `type` of material to maximize: `ship`, `structure`, `corporation`(defaulted to `material`)
+- `/outpost`: To participate use this command.
+  - `outpost_name`: Use this in the `/solve` command.
+  - `system_name`: To find optimal solution.
+  - `capsuleer_name`: 
+  - `corporation_name`: 
+  - `alliance_name`:
+- `/solve`: Run the constrained optimization to maximize total value.
+  - `days`: Number of `days` to harvest.
+  - `outpost_name`: The outpost to show.
+  - `type`: `material` (default), `ship`, `structure`, or `corporation`
+- `/config`: The minimum material requirements.
+  - `requirements`: Paste the exported list from the Eve Echoes industry.
+  - `type`: `material` (default), `ship`, `structure`, or `corporation`
+- `/reports`: The minimum `material` or participating `outpost`'s.
+  - `type`: Same as `/config type` with addition of `outpost`.
 
 **Note**: depending on your choices and anchored outposts the response may timeout...
 Try again after 30 seconds as the results are cached...".to_owned(),
