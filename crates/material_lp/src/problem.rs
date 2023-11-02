@@ -136,7 +136,7 @@ impl ResourceHarvestProblem {
         let mut solution = self.vars
             .maximise(self.total_value)
             .using(default_solver)
-            .with(self.total_array.eq(self.available_array))
+            .with(self.total_array.leq(self.available_array))
             ;
 
         for (outpost_name, consumed_outpost) in &self.consumed_outpost {

@@ -3,7 +3,6 @@ pub mod data;
 pub mod objective;
 pub mod problem;
 pub mod resource;
-pub mod solution;
 pub mod structure;
 
 use std::collections::HashMap;
