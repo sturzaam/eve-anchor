@@ -2,7 +2,7 @@ mod resource {
 
     use serde::{Deserialize, Serialize};
     use crate::structure::Outpost;
-    use crate::data::{slice_celestials, PLANETS};
+    use crate::data::{slice_celestials, get_constellation, PLANETS};
 
     #[derive(Debug, Clone, PartialEq)]
     pub struct Material {
@@ -14,7 +14,7 @@ mod resource {
         
     #[derive(Clone, Debug, Deserialize, PartialEq, Serialize, Default)]
     pub struct CelestialResource {
-        pub outpost_name: String,
+        pub key: String,
         pub planet_id: i64,
         pub resource_type_id: i64,
         pub init_output: f64,
@@ -32,7 +32,28 @@ mod resource {
             
             for (_, resource) in &planet.resource_info {
                 celestial_resources.push(CelestialResource{
-                    outpost_name: outpost_name.clone(),
+                    key: outpost_name.clone(),
+                    planet_id,
+                    resource_type_id: resource.resource_type_id,
+                    init_output: resource.init_output,
+                    richness_index: resource.richness_index,
+                    richness_value: resource.richness_value,
+                })
+            }
+        }
+        celestial_resources
+    }
+
+    pub fn celestial_resources_by_constellation(constellation_id: i64) -> Vec<CelestialResource> {
+        let mut celestial_resources: Vec<CelestialResource> = Vec::new();
+        let celestials = slice_celestials(constellation_id).expect("Failed to slice celestials");
+
+        for (_, planet) in PLANETS.iter().filter(|(key, _)| celestials.contains_key(*key)) {
+            let planet_id = planet.planet_id;
+            
+            for (_, resource) in &planet.resource_info {
+                celestial_resources.push(CelestialResource{
+                    key: get_constellation(constellation_id).unwrap().en_name.to_string(),
                     planet_id,
                     resource_type_id: resource.resource_type_id,
                     init_output: resource.init_output,
@@ -46,4 +67,4 @@ mod resource {
 
 }
 
-pub use resource::{Material, CelestialResource, celestial_resources_by_outpost};
+pub use resource::{Material, CelestialResource, celestial_resources_by_outpost, celestial_resources_by_constellation};

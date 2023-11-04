@@ -4,9 +4,10 @@ mod objective {
     use crate::data::{
         PLANETS,
         find_item,
-        slice_celestials
+        slice_celestials,
+        get_constellation
     };
-    use crate::resource::{Material, CelestialResource, celestial_resources_by_outpost};
+    use crate::resource::{Material, CelestialResource, celestial_resources_by_outpost, celestial_resources_by_constellation};
     use crate::structure::Outpost;
     
     pub fn map_objective(materials: Vec<Material>) -> (HashMap<i64, f64>, Value) {
@@ -153,6 +154,36 @@ mod objective {
         (available_outpost, available_planet, available_celestial_resource)
     }
     
+    pub fn map_constellation(outposts: Vec<Outpost>) -> (HashMap<String, f64>, HashMap<i64, f64>, Vec<CelestialResource>) {
+        let mut available_constellation: HashMap<String, f64> = HashMap::new();
+        let mut available_planet: HashMap<i64, f64> = HashMap::new();
+        let mut available_celestial_resource: Vec<CelestialResource> = Vec::new();
+        
+        for outpost in outposts {
+            let available_planets = 12.; //TODO: derive from capsuleer
+            let available_array = 22.; //TODO: derive from capsuleer
+
+    
+            let constellation = get_constellation(outpost.constellation_id);
+            match available_planets_by_outpost(outpost.clone(), available_array) {
+                Ok(planets) => {
+                    *available_constellation
+                        .entry(constellation.unwrap().en_name.to_string())
+                        .or_insert(0.0) += available_array * available_planets;
+                    for (key, value) in planets {
+                        *available_planet.entry(key).or_insert(0.0) += available_array;
+                    }
+                    available_celestial_resource.extend(celestial_resources_by_constellation(outpost.constellation_id))
+                }
+                Err(err) => {
+                    println!("Error: {}", err);
+                }
+            }
+        }
+        
+        (available_constellation, available_planet, available_celestial_resource)
+    }
+    
     pub fn push_material(line: &str, materials: &mut Vec<Material>) {
         let material_split: Vec<&str> = line.split("\t").collect();
         if material_split.len() >= 4 {
@@ -198,4 +229,4 @@ mod objective {
 }
 
 
-pub use objective::{map_objective, map_outpost, parse_decomposed_list, push_material};
+pub use objective::{map_objective, map_outpost, map_constellation, parse_decomposed_list, push_material};

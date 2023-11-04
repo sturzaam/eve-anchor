@@ -11,8 +11,8 @@ use std::io::{Read};
 use std::path::Path;
 use good_lp::solvers::Solution;
 
-use objective::{map_outpost, map_objective};
-use problem::ResourceHarvestProblem;
+use objective::{map_outpost, map_objective, map_constellation};
+use problem::{ResourceHarvestProblem};
 use resource::{Material, CelestialResource};
 use structure::{Capsuleer, Outpost, Corporation, Alliance};
 
@@ -82,9 +82,35 @@ pub fn create_alliance(alliance_name: &str) -> Alliance {
 
 pub fn solve(outposts: Vec<Outpost>, materials: Vec<Material>, days: f64) -> Vec<(CelestialResource, f64)> {
     let (minimum_output, value) = map_objective(materials);
-    let (available_outpost, available_planet, celestial_resources) = map_outpost(outposts);
+    let (available_key, available_planet, celestial_resources) = map_outpost(outposts);
     let mut harvest = ResourceHarvestProblem::new(
-        available_outpost,
+        available_key,
+        available_planet,
+        minimum_output,
+        value,
+        days,
+    );
+    let variables: Vec<_> = celestial_resources
+        .clone()
+        .into_iter()
+        .map(|r| harvest.add_resource(r))
+        .collect();
+    let solution = harvest.best_production();
+    let resource_quantities: Vec<_> = variables.iter().map(|&v| solution.value(v)).collect();
+    let result: Vec<_> = celestial_resources
+        .iter()
+        .zip(resource_quantities.iter().cloned())
+        .map(|(resource, quantity)| (resource.clone(), quantity))
+        .collect();
+    
+    result
+}
+
+pub fn solve_for_constellation(outposts: Vec<Outpost>, materials: Vec<Material>, days: f64) -> Vec<(CelestialResource, f64)> {
+    let (minimum_output, value) = map_objective(materials);
+    let (available_key, available_planet, celestial_resources) = map_constellation(outposts);
+    let mut harvest = ResourceHarvestProblem::new(
+        available_key,
         available_planet,
         minimum_output,
         value,
