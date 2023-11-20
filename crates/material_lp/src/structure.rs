@@ -87,7 +87,7 @@ impl Outpost {
         Ok(outpost)
     }
 
-    fn load(file_name: &str) -> Result<Corporation, Box<dyn Error>> {
+    pub fn load(file_name: &str) -> Result<Corporation, Box<dyn Error>> {
         let outpost_dir = Self::get_outpost_dir()?;
         let file_path = outpost_dir.join(file_name);
 
@@ -102,7 +102,7 @@ impl Outpost {
         }
     }
 
-    fn update(outpost: &Outpost, corporation: &mut Corporation) -> Result<(), Box<dyn Error>> {
+    pub fn update(outpost: &Outpost, corporation: &mut Corporation) -> Result<(), Box<dyn Error>> {
         if let Some(index) = corporation.outposts.iter().position(|decoded| decoded.capsuleer.name == outpost.capsuleer.name) {
             corporation.outposts.remove(index);
         }
@@ -112,7 +112,20 @@ impl Outpost {
         Ok(())
     }
 
-    fn save(file_name: &str, corporation: &Corporation) -> Result<(), Box<dyn Error>> {
+    pub fn delete(capsuleer_name: &str, key: String) -> Result<(), Box<dyn Error>> {
+        let file_name = format!("{}.bin", key);
+        let mut corporation = Self::load(&file_name)?;
+        
+        if let Some(index) = corporation.outposts.iter().position(|decoded| decoded.capsuleer.name == capsuleer_name) {
+            corporation.outposts.remove(index);
+        }
+
+        Self::save(&file_name, &corporation)?;
+
+        Ok(())
+    }
+
+    pub fn save(file_name: &str, corporation: &Corporation) -> Result<(), Box<dyn Error>> {
         let outpost_dir = Self::get_outpost_dir()?;
         let file_path = outpost_dir.join(file_name);
 

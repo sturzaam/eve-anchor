@@ -84,4 +84,22 @@ mod tests {
             }
         }
     }
+    
+    #[test]
+    fn test_delete_outpost() {
+        let capsuleer = create_capsuleer("Aaron", "Corporation A", "Alliance A");
+        let _ = Outpost::new(
+            "Outpost1".to_string(),
+            capsuleer.clone(),
+            "Tanoo".to_string(),
+            "test".to_string()
+        );
+        let _ = Outpost::delete("Aaron", "test".to_string());
+
+        let corporation = Outpost::load("test").unwrap();
+        if let Some(index) = corporation.outposts.iter().position(|decoded| decoded.capsuleer.name == "Aaron") {
+            panic!("Outpost still exists after deletion");
+        }
+
+    }
 }
