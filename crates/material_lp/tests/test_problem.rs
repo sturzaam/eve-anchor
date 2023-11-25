@@ -1,6 +1,49 @@
 use material_lp::{create_outpost, solve, solve_for_constellation};
+use material_lp::objective::{
+    map_outpost,
+    map_objective,
+    map_constellation,
+    parse_decomposed_list
+};
 use material_lp::resource::{CelestialResource};
-use material_lp::objective::parse_decomposed_list;
+use material_lp::problem::{ResourceHarvestProblem};
+
+#[test]
+fn fuel_problem() {
+    let outposts = vec![
+    create_outpost("Outpost1", "Tanoo", "Aaron", "Corporation A", "Alliance A", "test"),
+    create_outpost("Outpost2", "Sooma", "Benjamin", "Corporation A", "Alliance A", "test"),
+    create_outpost("Outpost3", "Futzchag", "Caroline", "Corporation A", "Alliance A", "test"),
+    create_outpost("Outpost4", "Fovihi", "David", "Corporation A", "Alliance A", "test"),
+    create_outpost("Outpost5", "Mohas", "Emily", "Corporation A", "Alliance A", "test"),
+    create_outpost("Outpost6", "Dooz", "Fiona", "Corporation A", "Alliance A", "test"),
+    ];
+    let materials = parse_decomposed_list("ID	Names	Quantity	Valuation 
+    1	Silicate Glass	1	1011.34 
+    2	Smartfab Units	1	418.3 
+    3	Liquid Ozone	1	166.13 
+    4	Reactive Gas	1	195.65 
+    5	Noble Gas	1	363.2 
+    6	Industrial Fibers	1	1199.78 
+    7	Supertensile Plastics	1	512.55 
+    8	Polyaramids	1	102.93 
+    9	Coolant	1	607.45 
+    10	Condensates	1	346.7 
+    11	Construction Blocks	1	381.78 
+    12	Nanites	1	1448.58 
+    ").unwrap();
+    let (minimum_output, value) = map_objective(materials);
+    let (available_key, available_planet, celestial_resources) = map_outpost(outposts);
+    let harvest = ResourceHarvestProblem::new(
+        available_key,
+        available_planet,
+        minimum_output.clone(),
+        value,
+        7.,
+    );
+    assert_eq!(harvest.minimum_output.get(&42002000014), Some(&1395693.3076923075));
+
+}
 
 #[test]
 fn using_outposts() {

@@ -68,10 +68,11 @@ impl ResourceHarvestProblem {
         days: f64,
     ) -> ResourceHarvestProblem {
         let available_array = available_key.values().copied().sum();
+        let available_outpost = available_array / ( 12. * 22.);
         Self::add_fuel(
             42002000014, 13., 18000.,
             days,
-            available_key.len() as f64,
+            available_outpost,
             &mut minimum_output
         );
         ResourceHarvestProblem {
