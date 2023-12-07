@@ -6,7 +6,6 @@ mod tests {
         map_objective,
         parse_decomposed_list,
         push_material,
-        map_outpost,
         map_constellation
     };
 
@@ -61,25 +60,6 @@ mod tests {
     }
 
     #[test]
-    fn map_set_of_outposts() {
-        let outposts = vec![
-            create_outpost("Outpost1", "Tanoo", "Aaron", "Corporation A", "Alliance A", "test"),
-            create_outpost("Outpost2", "Sooma", "Benjamin", "Corporation A", "Alliance A", "test"),
-            create_outpost("Outpost3", "Futzchag", "Caroline", "Corporation A", "Alliance A", "test"),
-            create_outpost("Outpost4", "Fovihi", "David", "Corporation A", "Alliance A", "test"),
-            create_outpost("Outpost5", "Mohas", "Emily", "Corporation A", "Alliance A", "test"),
-            create_outpost("Outpost6", "Dooz", "Fiona", "Corporation A", "Alliance A", "test"),
-        ];
-        let (available_outpost, available_planet, celestial_resources) = map_outpost(outposts);
-        assert_eq!(available_outpost.len(), 6);
-        assert_eq!(available_outpost.values().copied().sum::<f64>(), 1584.0);
-        assert_eq!(available_planet.len(), 353);
-        assert_eq!(available_planet.values().copied().sum::<f64>(), 7766.0);
-        assert_eq!(celestial_resources.len(), 1030);
-
-    }
-
-    #[test]
     fn map_set_of_constellations() {
         let outposts = vec![
             create_outpost("Outpost1", "Tanoo", "Aaron", "Corporation A", "Alliance A", "test"),
@@ -91,9 +71,9 @@ mod tests {
         ];
         let (available_outpost, available_planet, celestial_resources) = map_constellation(outposts);
         assert_eq!(available_outpost.len(), 3);
-        assert_eq!(available_outpost.values().copied().sum::<f64>(), 1584.0);
+        assert_eq!(available_outpost.values().copied().sum::<i32>(), 1584);
         assert_eq!(available_planet.len(), 174);
-        assert_eq!(available_planet.values().copied().sum::<f64>(), 7656.0);
+        assert_eq!(available_planet.values().copied().sum::<i32>(), 7656);
         assert_eq!(celestial_resources.len(), 990);
     }
 }

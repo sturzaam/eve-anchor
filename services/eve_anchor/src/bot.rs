@@ -1,19 +1,26 @@
 use std::path::{PathBuf};
+use std::collections::HashMap;
 
 use std::sync::{Arc, Mutex};
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use eve_anchor::{
     application_id, load_outposts, parse_requirements,
-    report::{solution_table, outpost_table, material_table}
+    report::{solution_table, outpost_table, material_table},
 };
-use material_lp::{create_outpost, solve};
-use material_lp::resource::{Material};
+use material_lp::{create_outpost, solve_for_constellation};
+use material_lp::resource::{Material, CelestialResource};
+use material_lp::data::{get_constellation};
+use material_lp::structure::Outpost; 
+
+#[derive(Debug, Eq, PartialEq, Hash)]
+pub struct CacheKey(String, i64);
 
 pub struct Bot {
     pub materials: Arc<Mutex<Vec<Material>>>,
     pub ship_materials: Arc<Mutex<Vec<Material>>>,
     pub structure_materials: Arc<Mutex<Vec<Material>>>,
     pub corporation_materials: Arc<Mutex<Vec<Material>>>,
+    pub cache: Arc<Mutex<HashMap<CacheKey, Vec<(CelestialResource, f64)>>>>,
 }
 
 impl Bot {
@@ -23,6 +30,7 @@ impl Bot {
             ship_materials: Arc::new(Mutex::new(Vec::new())),
             structure_materials: Arc::new(Mutex::new(Vec::new())),
             corporation_materials: Arc::new(Mutex::new(Vec::new())),
+            cache: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -173,15 +181,50 @@ impl Bot {
         let moved_materials = materials.clone();
         let file_name = PathBuf::from(format!("./target/outpost/{}.bin", application_id()));
         let outposts = load_outposts(&file_name).unwrap();
-        let values = solve(outposts, moved_materials, days);
-        let response = solution_table(outpost_name.clone(), values);
-        format!(
-            "To maximize total value for {} meeting the {} {} material requirements harvest the following:\n{}",
-            outpost_name,
-            materials.len(),
-            type_option,
-            response,
-        )
+
+        let cache_key = CacheKey(type_option.clone(), days as i64);
+    
+        if let Some(cached_result) = self.cache.lock().unwrap().get(&cache_key) {
+            if let Some(outpost) = outposts.iter().find(|&o| o.name == outpost_name) {
+                let constellation_id = outpost.constellation_id;
+                let constellation = get_constellation(constellation_id);
+                let constellation_name = constellation.unwrap().en_name.to_string();
+                let response = solution_table(constellation_name.to_string(), (*cached_result).clone());
+            // let response = solution_table(outpost_name.clone(), (*cached_result).clone());
+                return format!(
+                    "To maximize total value for {} meeting the {} {} material requirements within {} days harvest the following:\n{}",
+                    outpost_name,
+                    materials.len(),
+                    type_option,
+                    days,
+                    response,
+                );
+            } else {
+                return "Outpost not found.".to_string();
+            }
+        }
+
+        let values = solve_for_constellation(outposts.clone(), moved_materials, days);
+        let mut cache = self.cache.lock().unwrap();
+        cache.insert(cache_key, values.clone());
+
+        if let Some(outpost) = outposts.iter().find(|&o| o.name == outpost_name) {
+            let constellation_id = outpost.constellation_id;
+            let constellation = get_constellation(constellation_id);
+            let constellation_name = constellation.unwrap().en_name.to_string();
+            println!("{}", constellation_name);
+            let response = solution_table(constellation_name.to_string(), values);
+            format!(
+                "To maximize total value for {} meeting the {} {} material requirements within {} days harvest the following:\n{}",
+                outpost_name,
+                materials.len(),
+                type_option,
+                days,
+                response,
+            )
+        } else {
+            "Outpost not found.".to_string()
+        }
     }
 
     pub fn handle_outpost(&self, command: ApplicationCommandInteraction) -> String {
@@ -202,6 +245,18 @@ impl Bot {
         );
     
         format!("Outpost: {}", outpost.name).to_owned()
+    }
+
+    pub fn handle_delete(&self, command: ApplicationCommandInteraction) -> String {
+        let capsuleer_name = Self::option_string(&command, "capsuleer_name");
+        let _key = std::env::var("APP_ID");
+    
+        let _ = Outpost::delete(
+            &capsuleer_name,
+            application_id()
+        );
+    
+        format!("Outpost for : {} has been deleted", capsuleer_name).to_owned()
     }
     
     fn option_string(interaction: &ApplicationCommandInteraction, option_name: &str) -> String {

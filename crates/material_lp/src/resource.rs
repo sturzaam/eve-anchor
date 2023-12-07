@@ -1,7 +1,7 @@
 mod resource {
 
     use serde::{Deserialize, Serialize};
-    use crate::structure::Outpost;
+    use crate::manager::Outpost;
     use crate::data::{slice_celestials, get_constellation, PLANETS};
 
     #[derive(Debug, Clone, PartialEq)]

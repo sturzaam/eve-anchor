@@ -46,7 +46,7 @@ pub struct Value {
 pub struct ResourceHarvestProblem {
     vars: ProblemVariables,
     value: Value,
-    pub available_array: f64,
+    pub available_array: i32,
     days: f64,
     
     total_value: Expression,
@@ -54,27 +54,20 @@ pub struct ResourceHarvestProblem {
     consumed_key: HashMap<String, Expression>,
     consumed_planet: HashMap<i64, Expression>,
     resource_output: HashMap<i64, Expression>,
-    pub available_key: HashMap<String, f64>,
-    pub available_planet: HashMap<i64, f64>,
+    pub available_key: HashMap<String, i32>,
+    pub available_planet: HashMap<i64, i32>,
     pub minimum_output: HashMap<i64, f64>,
 }
 
 impl ResourceHarvestProblem {
     pub fn new(
-        available_key: HashMap<String, f64>,
-        available_planet: HashMap<i64, f64>,
+        available_key: HashMap<String, i32>,
+        available_planet: HashMap<i64, i32>,
         mut minimum_output: HashMap<i64, f64>,
         value: Value,
         days: f64,
     ) -> ResourceHarvestProblem {
         let available_array = available_key.values().copied().sum();
-        let available_outpost = available_array / ( 12. * 22.);
-        Self::add_fuel(
-            42002000014, 13., 18000.,
-            days,
-            available_outpost,
-            &mut minimum_output
-        );
         ResourceHarvestProblem {
             vars: variables!(),
             value,
@@ -93,15 +86,14 @@ impl ResourceHarvestProblem {
     }
 
     pub fn add_fuel(
+        &mut self,
         material_id: i64,
         gj_per_unit: f64,
         gj_needed: f64,
-        days: f64,
-        to_fuel: f64,
-        minimum_output: &mut HashMap<i64, f64>
+        to_fuel: f64
     ) {
-        let quantity = gj_needed / gj_per_unit * 24. * days * to_fuel;
-        minimum_output
+        let quantity = gj_needed / gj_per_unit * 24. * self.days * to_fuel;
+        self.minimum_output
             .entry(material_id)
             .and_modify(|value| *value += quantity)
             .or_insert(quantity);
@@ -111,7 +103,7 @@ impl ResourceHarvestProblem {
         let planet_limit = self.available_planet
             .get(&resource.planet_id)
             .copied()
-            .unwrap_or(22.);
+            .unwrap_or(22);
         let consumed_key = self.consumed_key
             .entry(resource.key.clone())
             .or_insert(0.into());
@@ -141,12 +133,12 @@ impl ResourceHarvestProblem {
             ;
 
         for (key, consumed_key) in &self.consumed_key {
-            let available_key = self.available_key.get(key).copied().unwrap_or(0.);
+            let available_key = self.available_key.get(key).copied().unwrap_or(0);
             solution = solution.with(consumed_key.clone().leq(available_key));
         }
 
         for (planet_id, consumed_planet) in &self.consumed_planet {
-            let available_planet = self.available_planet.get(&planet_id).copied().unwrap_or(0.);
+            let available_planet = self.available_planet.get(&planet_id).copied().unwrap_or(0);
             solution = solution.with(consumed_planet.clone().leq(available_planet));
         }
         

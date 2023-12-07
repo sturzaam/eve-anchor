@@ -1,5 +1,6 @@
 mod bot;
 
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use dotenv::dotenv;
 
@@ -122,7 +123,19 @@ impl EventHandler for Bot {
                                 .kind(CommandOptionType::String)
                                 .required(false)
                         })
-                })                    
+                })
+                .create_application_command(|command| {
+                    command
+                    .name("delete")
+                    .description("Remove a capsuleer outpost from the solver.")
+                    .create_option(|option| {
+                        option
+                            .name("capsuleer_name")
+                            .description("The name of the capsuleer to remove their outpost.")
+                            .kind(CommandOptionType::String)
+                            .required(true)
+                    })
+                })
         }).await.unwrap();
 
         info!("{:#?}", commands);
@@ -156,6 +169,7 @@ Try again after 30 seconds as the results are cached...".to_owned(),
                 "outpost" => self.handle_outpost(command.clone()),
                 "report" => self.handle_report(command.clone()),
                 "solve" => self.handle_solver(command.clone()),
+                "delete" => self.handle_delete(command.clone()),
                 command => unreachable!("Unknown command: {}", command),
             };
 
@@ -188,6 +202,7 @@ async fn main() {
         ship_materials: Arc::new(Mutex::new(Vec::new())),
         structure_materials: Arc::new(Mutex::new(Vec::new())),
         corporation_materials: Arc::new(Mutex::new(Vec::new())),
+        cache: Arc::new(Mutex::new(HashMap::new())),
     };
     let mut client = Client::builder(&a_bot_token, intents)
         .event_handler(bot)

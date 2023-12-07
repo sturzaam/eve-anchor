@@ -1,6 +1,5 @@
-use material_lp::{create_outpost, solve, solve_for_constellation};
+use material_lp::{create_outpost, solve_for_constellation};
 use material_lp::objective::{
-    map_outpost,
     map_objective,
     map_constellation,
     parse_decomposed_list
@@ -33,78 +32,18 @@ fn fuel_problem() {
     12	Nanites	1	1448.58 
     ").unwrap();
     let (minimum_output, value) = map_objective(materials);
-    let (available_key, available_planet, celestial_resources) = map_outpost(outposts);
-    let harvest = ResourceHarvestProblem::new(
+    let outpost_count = outposts.len() as f64;
+    let (available_key, available_planet, celestial_resources) = map_constellation(outposts);
+    let mut harvest = ResourceHarvestProblem::new(
         available_key,
         available_planet,
         minimum_output.clone(),
         value,
         7.,
     );
+    harvest.add_fuel(42002000014, 13., 18000., outpost_count);
     assert_eq!(harvest.minimum_output.get(&42002000014), Some(&1395693.3076923075));
 
-}
-
-#[test]
-fn using_outposts() {
-    let outposts = vec![
-        create_outpost("Outpost1", "Tanoo", "Aaron", "Corporation A", "Alliance A", "test"),
-        create_outpost("Outpost2", "Sooma", "Benjamin", "Corporation A", "Alliance A", "test"),
-        create_outpost("Outpost3", "Futzchag", "Caroline", "Corporation A", "Alliance A", "test"),
-        create_outpost("Outpost4", "Fovihi", "David", "Corporation A", "Alliance A", "test"),
-        create_outpost("Outpost5", "Mohas", "Emily", "Corporation A", "Alliance A", "test"),
-        create_outpost("Outpost6", "Dooz", "Fiona", "Corporation A", "Alliance A", "test"),
-    ];
-    let materials = parse_decomposed_list("ID	Names	Quantity	Valuation 
-    1	Silicate Glass	1	1011.34 
-    2	Smartfab Units	1	418.3 
-    3	Liquid Ozone	1	166.13 
-    4	Reactive Gas	1	195.65 
-    5	Noble Gas	1	363.2 
-    6	Industrial Fibers	1	1199.78 
-    7	Supertensile Plastics	1	512.55 
-    8	Polyaramids	1	102.93 
-    9	Coolant	1	607.45 
-    10	Condensates	1	346.7 
-    11	Construction Blocks	1	381.78 
-    12	Nanites	1	1448.58 
-    ").unwrap();
-    let results = solve(outposts, materials, 7.);
-    assert_eq!(results.len(), 1030);
-
-    let expected: Vec<(CelestialResource, f64)> = vec![
-        (
-            CelestialResource {
-                key: "Outpost2".into(),
-                planet_id: 40001002,
-                resource_type_id: 42001000032,
-                init_output: 10.399999618530272,
-                richness_index: 3,
-                richness_value: 1223,
-            },
-            22.
-        ),(
-            CelestialResource {
-                key: "Outpost5".into(),
-                planet_id: 40002134,
-                resource_type_id: 42001000019,
-                init_output: 18.84000015258789,
-                richness_index: 2,
-                richness_value: 1449,
-            },
-            22.
-        ),
-    ];
-
-    for resource in expected {
-        let outpost = expected_outpost(&resource, &results);
-        assert!(
-            results.contains(&resource),
-            "Expected {:?} not in results {:?}",
-            outpost.0,
-            outpost.1
-        );
-    }
 }
 
 
@@ -113,10 +52,10 @@ fn using_constellation() {
     let outposts = vec![
         create_outpost("Outpost1", "Tanoo", "Aaron", "Corporation A", "Alliance A", "test"),
         create_outpost("Outpost2", "Tanoo", "Benjamin", "Corporation A", "Alliance A", "test"),
-        create_outpost("Outpost3", "Futzchag", "Caroline", "Corporation A", "Alliance A", "test"),
+        create_outpost("Outpost3", "Tanoo", "Caroline", "Corporation A", "Alliance A", "test"),
         create_outpost("Outpost4", "Futzchag", "David", "Corporation A", "Alliance A", "test"),
-        create_outpost("Outpost5", "Mohas", "Emily", "Corporation A", "Alliance A", "test"),
-        create_outpost("Outpost6", "Mohas", "Fiona", "Corporation A", "Alliance A", "test"),
+        create_outpost("Outpost5", "Futzchag", "Emily", "Corporation A", "Alliance A", "test"),
+        create_outpost("Outpost6", "Futzchag", "Fiona", "Corporation A", "Alliance A", "test"),
     ];
     let materials = parse_decomposed_list("ID	Names	Quantity	Valuation 
     1	Silicate Glass	1	1011.34 
@@ -132,9 +71,8 @@ fn using_constellation() {
     11	Construction Blocks	1	381.78 
     12	Nanites	1	1448.58 
     ").unwrap();
-    let results = solve_for_constellation(outposts, materials, 7.);
-    assert_eq!(results.len(), 990);
 
+    let results = solve_for_constellation(outposts, materials, 7.);
     let expected: Vec<(CelestialResource, f64)> = vec![
         (
             CelestialResource { 
@@ -145,25 +83,25 @@ fn using_constellation() {
                 richness_index: 1,
                 richness_value: 1644
             }, 
-            44.0
+            66.0
         ),(
             CelestialResource {
-                key: "Hevaka".into(),
-                planet_id: 40002134,
-                resource_type_id: 42001000019,
-                init_output: 18.84000015258789,
+                key: "Mamouna".into(),
+                planet_id: 40001200,
+                resource_type_id: 42002000014,
+                init_output: 29.200000762939453,
                 richness_index: 2,
-                richness_value: 1449,
+                richness_value: 1298,
             },
-            44.
-        ),
+            66.0,
+        )
     ];
 
     for resource in expected {
         let outpost = expected_outpost(&resource, &results);
         assert!(
             results.contains(&resource),
-            "Expected {:?} not in results {:?}",
+            "Expected {:#?} not in results {:#?}",
             outpost.0,
             outpost.1
         );

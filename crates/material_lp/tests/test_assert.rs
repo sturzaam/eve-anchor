@@ -1,4 +1,4 @@
-use material_lp::structure::Outpost;
+use material_lp::manager::Outpost;
 use material_lp::resource::{Material, celestial_resources_by_outpost};
 use material_lp::{assert_materials_available, create_outpost};
 

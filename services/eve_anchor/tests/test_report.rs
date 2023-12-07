@@ -25,7 +25,7 @@ mod tests {
         let outpost_name = "Outpost1".to_string();
         let solution: Vec<(CelestialResource, f64)> = vec![
             (CelestialResource {
-                outpost_name: "Outpost1".to_string(),
+                key: "Outpost1".to_string(),
                 planet_id: 40000005,
                 resource_type_id: 42001000032,
                 init_output: 1.,
@@ -33,7 +33,7 @@ mod tests {
                 richness_value: 1,
             }, 22.),
             (CelestialResource {
-                outpost_name: "Outpost1".to_string(),
+                key: "Outpost1".to_string(),
                 planet_id: 40000005,
                 resource_type_id: 42001000033,
                 init_output: 1.,
@@ -41,7 +41,7 @@ mod tests {
                 richness_value: 1,
             }, 3.),
             (CelestialResource {
-                outpost_name: "Outpost1".to_string(),
+                key: "Outpost1".to_string(),
                 planet_id: 40000007,
                 resource_type_id: 42001000032,
                 init_output: 1.,
@@ -49,7 +49,7 @@ mod tests {
                 richness_value: 1,
             }, 21.),
             (CelestialResource {
-                outpost_name: "Outpost1".to_string(),
+                key: "Outpost1".to_string(),
                 planet_id: 40000007,
                 resource_type_id: 42001000033,
                 init_output: 1.,

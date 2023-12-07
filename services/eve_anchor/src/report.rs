@@ -17,14 +17,14 @@ pub struct OutpostTable {
     pub system: Box<str>,
 }
 
-pub fn solution_table(outpost_name: String, values: Vec<(CelestialResource, f64)>) -> String {
+pub fn solution_table(key: String, values: Vec<(CelestialResource, f64)>) -> String {
     let mut solution_table: Vec<SolutionTable> = Vec::new();
 
     for (celestial_resource, value) in values.iter() {
         if round_to_2_decimal_places(*value) == 0.0 {
             continue;
         }
-        if *outpost_name != celestial_resource.outpost_name {
+        if *key != celestial_resource.key {
             continue;
         }
         let system = system_by_planet(celestial_resource.planet_id)
