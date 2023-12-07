@@ -6,9 +6,6 @@ pub mod resource;
 pub mod manager;
 
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{Read};
-use std::path::Path;
 use good_lp::solvers::Solution;
 
 use objective::{map_objective, map_constellation};
@@ -28,9 +25,6 @@ pub fn create_outpost(
     outpost_name: &str,
     outpost_system: &str,
     capsuleer_name: &str,
-    corporation_name: &str,
-    alliance_name: &str,
-    key: &str,
 ) -> Outpost {
     Outpost::new(
         outpost_name.to_string(),

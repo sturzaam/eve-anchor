@@ -62,12 +62,12 @@ mod tests {
     #[test]
     fn map_set_of_constellations() {
         let outposts = vec![
-            create_outpost("Outpost1", "Tanoo", "Aaron", "Corporation A", "Alliance A", "test"),
-            create_outpost("Outpost2", "Tanoo", "Benjamin", "Corporation A", "Alliance A", "test"),
-            create_outpost("Outpost3", "Futzchag", "Caroline", "Corporation A", "Alliance A", "test"),
-            create_outpost("Outpost4", "Futzchag", "David", "Corporation A", "Alliance A", "test"),
-            create_outpost("Outpost5", "Mohas", "Emily", "Corporation A", "Alliance A", "test"),
-            create_outpost("Outpost6", "Mohas", "Fiona", "Corporation A", "Alliance A", "test"),
+            create_outpost("Outpost1", "Tanoo", "Aaron"),
+            create_outpost("Outpost2", "Tanoo", "Benjamin"),
+            create_outpost("Outpost3", "Futzchag", "Caroline"),
+            create_outpost("Outpost4", "Futzchag", "David"),
+            create_outpost("Outpost5", "Mohas", "Emily"),
+            create_outpost("Outpost6", "Mohas", "Fiona"),
         ];
         let (available_outpost, available_planet, celestial_resources) = map_constellation(outposts);
         assert_eq!(available_outpost.len(), 3);

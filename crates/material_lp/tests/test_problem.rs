@@ -10,12 +10,12 @@ use material_lp::problem::{ResourceHarvestProblem};
 #[test]
 fn fuel_problem() {
     let outposts = vec![
-    create_outpost("Outpost1", "Tanoo", "Aaron", "Corporation A", "Alliance A", "test"),
-    create_outpost("Outpost2", "Sooma", "Benjamin", "Corporation A", "Alliance A", "test"),
-    create_outpost("Outpost3", "Futzchag", "Caroline", "Corporation A", "Alliance A", "test"),
-    create_outpost("Outpost4", "Fovihi", "David", "Corporation A", "Alliance A", "test"),
-    create_outpost("Outpost5", "Mohas", "Emily", "Corporation A", "Alliance A", "test"),
-    create_outpost("Outpost6", "Dooz", "Fiona", "Corporation A", "Alliance A", "test"),
+    create_outpost("Outpost1", "Tanoo", "Aaron"),
+    create_outpost("Outpost2", "Sooma", "Benjamin"),
+    create_outpost("Outpost3", "Futzchag", "Caroline"),
+    create_outpost("Outpost4", "Fovihi", "David"),
+    create_outpost("Outpost5", "Mohas", "Emily"),
+    create_outpost("Outpost6", "Dooz", "Fiona"),
     ];
     let materials = parse_decomposed_list("ID	Names	Quantity	Valuation 
     1	Silicate Glass	1	1011.34 
@@ -33,7 +33,7 @@ fn fuel_problem() {
     ").unwrap();
     let (minimum_output, value) = map_objective(materials);
     let outpost_count = outposts.len() as f64;
-    let (available_key, available_planet, celestial_resources) = map_constellation(outposts);
+    let (available_key, available_planet, _celestial_resources) = map_constellation(outposts);
     let mut harvest = ResourceHarvestProblem::new(
         available_key,
         available_planet,
@@ -50,12 +50,12 @@ fn fuel_problem() {
 #[test]
 fn using_constellation() {
     let outposts = vec![
-        create_outpost("Outpost1", "Tanoo", "Aaron", "Corporation A", "Alliance A", "test"),
-        create_outpost("Outpost2", "Tanoo", "Benjamin", "Corporation A", "Alliance A", "test"),
-        create_outpost("Outpost3", "Tanoo", "Caroline", "Corporation A", "Alliance A", "test"),
-        create_outpost("Outpost4", "Futzchag", "David", "Corporation A", "Alliance A", "test"),
-        create_outpost("Outpost5", "Futzchag", "Emily", "Corporation A", "Alliance A", "test"),
-        create_outpost("Outpost6", "Futzchag", "Fiona", "Corporation A", "Alliance A", "test"),
+        create_outpost("Outpost1", "Tanoo", "Aaron"),
+        create_outpost("Outpost2", "Tanoo", "Benjamin"),
+        create_outpost("Outpost3", "Tanoo", "Caroline"),
+        create_outpost("Outpost4", "Futzchag", "David"),
+        create_outpost("Outpost5", "Futzchag", "Emily"),
+        create_outpost("Outpost6", "Futzchag", "Fiona"),
     ];
     let materials = parse_decomposed_list("ID	Names	Quantity	Valuation 
     1	Silicate Glass	1	1011.34 

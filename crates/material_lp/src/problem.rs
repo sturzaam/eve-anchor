@@ -63,7 +63,7 @@ impl ResourceHarvestProblem {
     pub fn new(
         available_key: HashMap<String, i32>,
         available_planet: HashMap<i64, i32>,
-        mut minimum_output: HashMap<i64, f64>,
+        minimum_output: HashMap<i64, f64>,
         value: Value,
         days: f64,
     ) -> ResourceHarvestProblem {

@@ -7,7 +7,7 @@ mod objective {
         slice_celestials,
         get_constellation
     };
-    use crate::resource::{Material, CelestialResource, celestial_resources_by_outpost, celestial_resources_by_constellation};
+    use crate::resource::{Material, CelestialResource, celestial_resources_by_constellation};
     use crate::manager::Outpost;
     
     pub fn map_objective(materials: Vec<Material>) -> (HashMap<i64, f64>, Value) {
@@ -139,7 +139,7 @@ mod objective {
                     *available_constellation
                         .entry(constellation.unwrap().en_name.to_string())
                         .or_insert(0) += outpost.available_arrays * outpost.available_planets;
-                    for (key, value) in planets {
+                    for (key, _value) in planets {
                         *available_planet.entry(key).or_insert(0) += outpost.available_arrays;
                     }
                     available_celestial_resource.extend(celestial_resources_by_constellation(outpost.constellation_id))

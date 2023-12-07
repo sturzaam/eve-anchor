@@ -20,8 +20,8 @@ fn panic_when_materials_not_available() {
     ];
 
     let outposts: Vec<Outpost> = vec![
-        create_outpost("Outpost1", "R97-CI", "Aaron", "Corporation A", "Alliance A", "test"),
-        create_outpost("Outpost2", "R97-CI", "Aaron", "Corporation A", "Alliance A", "test"),
+        create_outpost("Outpost1", "R97-CI", "Aaron"),
+        create_outpost("Outpost2", "R97-CI", "Aaron"),
     ];
     
     let result = std::panic::catch_unwind(|| {

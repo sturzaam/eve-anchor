@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
     use material_lp::{
         manager::{Manager, Outpost},
         create_corporation,
@@ -66,7 +65,7 @@ mod tests {
 
     #[test]
     fn test_new_alliance_outpost() {
-        let mut alliance = create_alliance("Alliance");
+        let alliance = create_alliance("Alliance");
         let mut manager = Manager::Alliance(alliance);
         setup_manager_with_outposts(&mut manager);
     
@@ -84,7 +83,7 @@ mod tests {
     
     #[test]
     fn test_delete_alliance_outpost() {
-        let mut alliance = create_alliance("Alliance");
+        let alliance = create_alliance("Alliance");
         let mut manager = Manager::Alliance(alliance);
         setup_manager_with_outposts(&mut manager);
     
@@ -95,7 +94,7 @@ mod tests {
 
     #[test]
     fn test_new_corporation_outpost() {
-        let mut corporation = create_corporation("Corporation", "Alliance");
+        let corporation = create_corporation("Corporation", "Alliance");
         let mut manager = Manager::Corporation(corporation);
         setup_manager_with_outposts(&mut manager);
     
@@ -113,7 +112,7 @@ mod tests {
     
     #[test]
     fn test_delete_corporation_outpost() {
-        let mut corporation = create_corporation("Corporation", "Alliance");
+        let corporation = create_corporation("Corporation", "Alliance");
         let mut manager = Manager::Corporation(corporation);
         setup_manager_with_outposts(&mut manager);
     
