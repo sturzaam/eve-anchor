@@ -67,7 +67,11 @@ pub fn create_alliance(alliance_name: &str) -> Alliance {
     Alliance::new(alliance_name.to_string()).unwrap()
 }
 
-pub fn solve_for_constellation(outposts: Vec<Outpost>, materials: Vec<Material>, days: f64) -> Vec<(CelestialResource, f64)> {
+pub fn solve_for_constellation(
+    outposts: Vec<Outpost>,
+    materials: Vec<Material>,
+    days: f64,
+) -> Result<Vec<(CelestialResource, f64)>, String> {
     let outpost_count = outposts.len() as f64;
     let (minimum_output, value) = map_objective(materials);
     let (available_key, available_planet, celestial_resources) = map_constellation(outposts);
@@ -85,13 +89,15 @@ pub fn solve_for_constellation(outposts: Vec<Outpost>, materials: Vec<Material>,
         .collect();
     
     harvest.add_fuel(42002000014, 13., 18000., outpost_count);
-    let solution = harvest.best_production();
-    let resource_quantities: Vec<_> = variables.iter().map(|&v| solution.value(v)).collect();
+
+    let best_production = harvest.best_production()?;
+
+    let resource_quantities: Vec<_> = variables.iter().map(|&v| best_production.value(v)).collect();
     let result: Vec<_> = celestial_resources
         .iter()
         .zip(resource_quantities.iter().cloned())
         .map(|(resource, quantity)| (resource.clone(), quantity))
         .collect();
-    
-    result
+
+    Ok(result)
 }

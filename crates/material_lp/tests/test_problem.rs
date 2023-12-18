@@ -72,7 +72,13 @@ fn using_constellation() {
     12	Nanites	1	1448.58 
     ").unwrap();
 
-    let results = solve_for_constellation(outposts, materials, 7.);
+    let results = match solve_for_constellation(outposts, materials, 7.) {
+        Ok(res) => res,
+        Err(err) => {
+            // Handle the error or panic with a message
+            panic!("Failed to solve problem: {}", err);
+        }
+    };
     let expected: Vec<(CelestialResource, f64)> = vec![
         (
             CelestialResource { 

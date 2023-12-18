@@ -124,7 +124,7 @@ impl ResourceHarvestProblem {
         array_quantity
     }
 
-    pub fn best_production(self) -> impl Solution {
+    pub fn best_production(self) -> Result<impl Solution, String> {
                
         let mut solution = self.vars
             .maximise(self.total_value)
@@ -151,7 +151,10 @@ impl ResourceHarvestProblem {
             solution = solution.with(sum_resource_output.geq(*minimum_output));
         }
 
-        solution.solve().unwrap()
+        match solution.solve() {
+            Ok(solution) => Ok(solution),
+            Err(err) => Err(format!("Error solving the problem: {:?}", err)),
+        }
     }
 }
 
