@@ -135,7 +135,7 @@ impl Manager {
             file.read_to_end(&mut manager_data)?;
             Ok(bincode::deserialize(&manager_data)?)
         } else {
-            fs::create_dir_all(&manager_dir)?;
+            self.save_data()?;
             return Err(format!("A manager data does not exist so it was created: {}.", manager_dir.display()).into());
         }
     }
