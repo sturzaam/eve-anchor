@@ -140,7 +140,7 @@ impl Manager {
         }
     }
 
-    fn save_data(&self) -> Result<(), Box<dyn Error>> {
+    pub fn save_data(&self) -> Result<(), Box<dyn Error>> {
         let manager_dir = self.get_dir();
         fs::create_dir_all(&manager_dir)?;
         let file_path = manager_dir.join("data.bin");
