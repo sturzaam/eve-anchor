@@ -83,7 +83,7 @@ pub enum Manager {
 }
 
 impl Manager {
-    fn get_dir(&self) -> PathBuf {
+    pub fn get_dir(&self) -> PathBuf {
         match self {
             Manager::Alliance(alliance) => alliance.get_dir(),
             Manager::Corporation(corporation) => corporation.get_dir(),
