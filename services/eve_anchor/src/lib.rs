@@ -1,4 +1,3 @@
-pub mod outpost;
 pub mod report;
 
 use std::fs::File;
@@ -13,7 +12,7 @@ use serenity::model::prelude::application_command::CommandDataOption;
 use material_lp::{
     resource::{Material},
     data::{find_item},
-    structure::{Outpost, Corporation},
+    manager::{Outpost, Corporation},
 };
 
 pub fn load_outposts(file_path: &Path) -> Result<Vec<Outpost>, anyhow::Error> {

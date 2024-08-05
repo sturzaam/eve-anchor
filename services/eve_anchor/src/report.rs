@@ -1,7 +1,7 @@
 use prettytable::{Table, Row, Cell, format::Alignment, format::FormatBuilder,row};
 use std::cmp::Ordering;
 use material_lp::data::{get_celestial, system_by_planet, get_item, get_system};
-use material_lp::structure::Outpost; 
+use material_lp::manager::Outpost; 
 use material_lp::resource::{Material, CelestialResource}; 
 
 
@@ -15,6 +15,8 @@ pub struct OutpostTable {
     pub outpost_name: Box<str>,
     pub capsuleer_name: Box<str>,
     pub system: Box<str>,
+    pub planets: Box<str>,
+    pub arrays: Box<str>,
 }
 
 pub fn solution_table(key: String, values: Vec<(CelestialResource, f64)>) -> String {
@@ -133,10 +135,21 @@ pub fn outpost_table(values: Vec<Outpost>) -> String {
                 system: get_system(moved_outpost.system_id)
                     .unwrap()
                     .en_name
-                    .clone()
+                    .clone(),
+                planets: moved_outpost
+                    .available_planets
+                    .to_string()
+                    .into(),
+                arrays: moved_outpost
+                    .available_arrays
+                    .to_string()
+                    .into(),
             }
         );
     }
+
+
+    outpost_table.sort_by(|a, b| a.system.cmp(&b.system));
     
     
     let mut table = Table::new();
@@ -150,6 +163,8 @@ pub fn outpost_table(values: Vec<Outpost>) -> String {
         Cell::new("Outpost").style_spec("bFg"),
         Cell::new("Capsuleer").style_spec("bFg"),
         Cell::new("System").style_spec("bFg"),
+        Cell::new("Planets").style_spec("bFg"),
+        Cell::new("Arrays").style_spec("bFg"),
     ]));
 
     for item in outpost_table {
@@ -157,6 +172,8 @@ pub fn outpost_table(values: Vec<Outpost>) -> String {
             Cell::new(&item.outpost_name),
             Cell::new(&item.capsuleer_name),
             Cell::new(&item.system),
+            Cell::new(&item.planets),
+            Cell::new(&item.arrays),
         ]));
     }
 
