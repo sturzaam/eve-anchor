@@ -163,8 +163,8 @@ pub fn outpost_table(values: Vec<Outpost>) -> String {
         Cell::new("Outpost").style_spec("bFg"),
         Cell::new("Capsuleer").style_spec("bFg"),
         Cell::new("System").style_spec("bFg"),
-        Cell::new("Planets").style_spec("bFg"),
-        Cell::new("Arrays").style_spec("bFg"),
+        // Cell::new("Planets").style_spec("bFg"),
+        // Cell::new("Arrays").style_spec("bFg"),
     ]));
 
     for item in outpost_table {
@@ -172,8 +172,8 @@ pub fn outpost_table(values: Vec<Outpost>) -> String {
             Cell::new(&item.outpost_name),
             Cell::new(&item.capsuleer_name),
             Cell::new(&item.system),
-            Cell::new(&item.planets),
-            Cell::new(&item.arrays),
+            // Cell::new(&item.planets),
+            // Cell::new(&item.arrays),
         ]));
     }
 
