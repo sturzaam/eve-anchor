@@ -7,11 +7,6 @@ use clap::Parser;
 use rocket::*;
 use manager::{database, environment};
 
-use crate::routes::health_check;
-use crate::routes::members;
-use crate::routes::capsuleers;
-use crate::routes::skills;
-
 #[derive(Parser)]
 struct Cli {
     /// Name of the configuration
@@ -52,8 +47,5 @@ async fn rocket() -> _ {
         )
         .manage(db)
         .manage(config)
-        .mount("/api/", routes![health_check])
-        .mount("/api/members/", members::routes())
-        .mount("/api/capsuleers/", capsuleers::routes())
-        .mount("/api/skills/", skills::routes())
+        .mount("/api/", routes::routes())
 }
