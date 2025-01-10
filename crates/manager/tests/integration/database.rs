@@ -5,6 +5,7 @@ mod tests {
 
     use sea_orm::*;
 
+    use manager::*;
     use manager::entities::*;
     use manager::entities::prelude::*;
     use manager::environment::EnvironmentManager;
@@ -22,17 +23,12 @@ mod tests {
         let config = EnvironmentManager::load_config("test")
             .await
             .expect("Failed to load configuration");
+
         let db = DatabaseManager::revision(&config)
             .await
             .expect("Failed to connect to database");
 
-        let alliance = alliance::ActiveModel {
-            name: ActiveValue::Set(TEST_ALLIANCE_NAME.to_owned()),
-            ..Default::default()
-        };
-
-        let saved_alliance = Alliance::insert(alliance.clone())
-            .exec(&db)
+        let saved_alliance = new_alliance(&db, TEST_ALLIANCE_NAME)
             .await
             .expect("Failed to add alliance to database");
 
@@ -55,27 +51,14 @@ mod tests {
             .await
             .expect("Failed to connect to database");
 
-        let alliance = alliance::ActiveModel {
-            name: ActiveValue::Set(TEST_ALLIANCE_NAME.to_owned()),
-            ..Default::default()
-        };
-
-        let saved_alliance = Alliance::insert(alliance.clone())
-            .exec(&db)
+        let saved_alliance = new_alliance(&db, TEST_ALLIANCE_NAME)
             .await
             .expect("Failed to add alliance to database");
 
-        let corporation = corporation::ActiveModel {
-            name: ActiveValue::Set(TEST_CORPORATION_NAME.to_owned()),
-            alliance_id: ActiveValue::Set(saved_alliance.last_insert_id),
-            ..Default::default()
-        };
-
-        let saved_corporation = Corporation::insert(corporation.clone())
-            .exec(&db)
+        let saved_corporation = new_corporation(&db, TEST_CORPORATION_NAME, saved_alliance.last_insert_id)
             .await
             .expect("Failed to add corporation to database");
-
+        
         let retrieved_corporation = Corporation::find_by_name(TEST_CORPORATION_NAME, &db)
             .await
             .unwrap()
@@ -95,44 +78,19 @@ mod tests {
             .await
             .expect("Failed to connect to database");
 
-        let alliance = Alliance::insert(
-            alliance::ActiveModel {
-                name: ActiveValue::Set(TEST_ALLIANCE_NAME.to_owned()),
-                ..Default::default()
-            })
-            .exec(&db)
+        let saved_alliance = new_alliance(&db, TEST_ALLIANCE_NAME)
             .await
             .expect("Failed to add alliance to database");
 
-        let corporation = Corporation::insert(
-            corporation::ActiveModel {
-                name: ActiveValue::Set(TEST_CORPORATION_NAME.to_owned()),
-                alliance_id: ActiveValue::Set(alliance.last_insert_id),
-                ..Default::default()
-            })
-            .exec(&db)
+        let saved_corporation = new_corporation(&db, TEST_CORPORATION_NAME, saved_alliance.last_insert_id)
             .await
             .expect("Failed to add corporation to database");
-
-        let member = Member::insert(
-            member::ActiveModel {
-                name: ActiveValue::Set(TEST_MEMBER_NAME.to_owned()),
-                corporation_id: ActiveValue::Set(corporation.last_insert_id),
-                ..Default::default()
-            })
-            .exec(&db)
+        
+        let saved_member = new_member(&db, TEST_MEMBER_NAME, saved_corporation.last_insert_id)
             .await
             .expect("Failed to add member to database");
 
-        let capsuleer = capsuleer::ActiveModel {
-            name: ActiveValue::Set(TEST_CAPSULEER_NAME.to_owned()),
-            member_id: ActiveValue::Set(member.last_insert_id),
-            corporation_id: ActiveValue::Set(corporation.last_insert_id),
-            ..Default::default()
-        };
-
-        let saved_capsuleer = Capsuleer::insert(capsuleer.clone())
-            .exec(&db)
+        let saved_capsuleer = new_capsuleer(&db, TEST_CAPSULEER_NAME, saved_member.last_insert_id, saved_corporation.last_insert_id)
             .await
             .expect("Failed to add capsuleer to database");
 
@@ -156,57 +114,23 @@ mod tests {
             .await
             .expect("Failed to connect to database");
 
-        let alliance = Alliance::insert(
-            alliance::ActiveModel {
-                name: ActiveValue::Set(TEST_ALLIANCE_NAME.to_owned()),
-                ..Default::default()
-            })
-            .exec(&db)
+        let saved_alliance = new_alliance(&db, TEST_ALLIANCE_NAME)
             .await
             .expect("Failed to add alliance to database");
 
-        let corporation = Corporation::insert(
-            corporation::ActiveModel {
-                name: ActiveValue::Set(TEST_CORPORATION_NAME.to_owned()),
-                alliance_id: ActiveValue::Set(alliance.last_insert_id),
-                ..Default::default()
-            })
-            .exec(&db)
+        let saved_corporation = new_corporation(&db, TEST_CORPORATION_NAME, saved_alliance.last_insert_id)
             .await
             .expect("Failed to add corporation to database");
-
-        let member = Member::insert(
-            member::ActiveModel {
-                name: ActiveValue::Set(TEST_MEMBER_NAME.to_owned()),
-                corporation_id: ActiveValue::Set(corporation.last_insert_id),
-                ..Default::default()
-            })
-            .exec(&db)
+        
+        let saved_member = new_member(&db, TEST_MEMBER_NAME, saved_corporation.last_insert_id)
             .await
             .expect("Failed to add member to database");
 
-        let capsuleer = Capsuleer::insert(
-            capsuleer::ActiveModel {
-                name: ActiveValue::Set(TEST_CAPSULEER_NAME.to_owned()),
-                member_id: ActiveValue::Set(member.last_insert_id),
-                corporation_id: ActiveValue::Set(corporation.last_insert_id),
-                ..Default::default()
-            })
-            .exec(&db)
+        let saved_capsuleer = new_capsuleer(&db, TEST_CAPSULEER_NAME, saved_member.last_insert_id, saved_corporation.last_insert_id)
             .await
             .expect("Failed to add capsuleer to database");
 
-        let skill = skill::ActiveModel {
-            name: ActiveValue::Set(TEST_SKILL_NAME.to_owned()),
-            basic: ActiveValue::Set(0),
-            advanced: ActiveValue::Set(0),
-            expert: ActiveValue::Set(0),
-            capsuleer_id: ActiveValue::Set(capsuleer.last_insert_id),
-            ..Default::default()
-        };
-
-        let saved_skill = Skill::insert(skill.clone())
-            .exec(&db)
+        let saved_skill = new_skill(&db, TEST_SKILL_NAME, 5, 5, 4, saved_capsuleer.last_insert_id)
             .await
             .expect("Failed to add skill to database");
             
@@ -217,8 +141,8 @@ mod tests {
             .unwrap();
 
         assert_eq!(retrieved_skill.name, TEST_SKILL_NAME);
-        assert_eq!(retrieved_skill.basic, 0);
-        assert_eq!(retrieved_skill.advanced, 0);
-        assert_eq!(retrieved_skill.expert, 0);
+        assert_eq!(retrieved_skill.basic, 5);
+        assert_eq!(retrieved_skill.advanced, 5);
+        assert_eq!(retrieved_skill.expert, 4);
     }
 }
