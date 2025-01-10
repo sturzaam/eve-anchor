@@ -10,6 +10,7 @@ fn test_create_capsuleer() {
         name: TEST_CAPSULEER_NAME.to_string(),
         active: true,
         member_id: 1,
+        corporation_id: 1,
     };
     
     assert_eq!(capsuleer.name, TEST_CAPSULEER_NAME.to_string());

@@ -3,11 +3,11 @@
 // pub use super::kraken::Entity as Kraken;
 // has many
 // pub use super::doctrine::Entity as Doctrine;
-// pub use super::alliance::Entity as Alliance;
+pub use super::alliance::Entity as Alliance;
 // pub use super::neighbor::Entity as Neighbor;
 // pub use super::spreadsheet::Entity as Spreadsheet;
 // has many 
-// pub use super::corporation::Entity as Corporation;
+pub use super::corporation::Entity as Corporation;
 // pub use super::spreadsheet::Entity as Spreadsheet;
 // has many 
 // pub use super::dues::Entity as Dues;

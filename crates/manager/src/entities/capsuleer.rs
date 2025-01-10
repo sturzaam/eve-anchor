@@ -8,6 +8,7 @@ pub struct Model {
     pub name: String,
     pub active: bool,
     pub member_id: i32,
+    pub corporation_id: i32,
 }
 
 impl Model {
@@ -28,6 +29,14 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     Member,
+    #[sea_orm(
+        belongs_to = "super::corporation::Entity",
+        from = "Column::CorporationId",
+        to = "super::corporation::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Corporation,
 }
 
 impl Related<super::skill::Entity> for Entity {
@@ -39,6 +48,12 @@ impl Related<super::skill::Entity> for Entity {
 impl Related<super::member::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Member.def()
+    }
+}
+
+impl Related<super::corporation::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Corporation.def()
     }
 }
 

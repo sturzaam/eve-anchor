@@ -3,6 +3,10 @@ pub use sea_orm_migration::prelude::*;
 mod m20240804_000001_create_member_table;
 mod m20240804_000002_create_capsuleer_table;
 mod m20240804_000003_create_skill_table;
+mod m20250109_000001_create_alliance_table;
+mod m20250109_000002_create_corporation_table;
+mod m20250109_000003_alter_member_table;
+mod m20250109_000004_alter_capsuleer_table;
 
 pub struct Migrator;
 
@@ -13,6 +17,10 @@ impl MigratorTrait for Migrator {
             Box::new(m20240804_000001_create_member_table::Migration),
             Box::new(m20240804_000002_create_capsuleer_table::Migration),
             Box::new(m20240804_000003_create_skill_table::Migration),
+            Box::new(m20250109_000001_create_alliance_table::Migration),
+            Box::new(m20250109_000002_create_corporation_table::Migration),
+            Box::new(m20250109_000003_alter_member_table::Migration),
+            Box::new(m20250109_000004_alter_capsuleer_table::Migration),
         ]
     }
 }

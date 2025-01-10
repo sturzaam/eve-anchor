@@ -2,6 +2,8 @@
 
 pub mod prelude;
 
+pub mod alliance;
+pub mod corporation;
 pub mod capsuleer;
 pub mod member;
 pub mod skill;

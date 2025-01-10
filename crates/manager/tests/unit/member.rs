@@ -9,6 +9,7 @@ fn test_create_member() {
         id: 1,
         name: TEST_MEMBER_NAME.to_string(),
         active: true,
+        corporation_id: 1,
     };
     
     assert_eq!(member.name, TEST_MEMBER_NAME.to_string());

@@ -1,13 +1,13 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "member")]
+#[sea_orm(table_name = "corporation")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub name: String,
     pub active: bool,
-    pub corporation_id: i32,
+    pub alliance_id: i32,
 }
 
 impl Model {
@@ -20,14 +20,16 @@ impl Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::capsuleer::Entity")]
     Capsuleer,
+    #[sea_orm(has_many = "super::member::Entity")]
+    Member,
     #[sea_orm(
-        belongs_to = "super::corporation::Entity",
-        from = "Column::CorporationId",
-        to = "super::corporation::Column::Id",
+        belongs_to = "super::alliance::Entity",
+        from = "Column::AllianceId",
+        to = "super::alliance::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    Corporation,
+    Alliance,
 }
 
 impl Related<super::capsuleer::Entity> for Entity {
@@ -36,9 +38,15 @@ impl Related<super::capsuleer::Entity> for Entity {
     }
 }
 
-impl Related<super::corporation::Entity> for Entity {
+impl Related<super::member::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Corporation.def()
+        Relation::Member.def()
+    }
+}
+
+impl Related<super::alliance::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Alliance.def()
     }
 }
 
