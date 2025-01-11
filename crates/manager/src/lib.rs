@@ -83,3 +83,41 @@ pub async fn new_skill(
     };
     Skill::insert(skill).exec(db).await
 }
+
+pub async fn new_problem(
+    db: &DatabaseConnection,
+    name: &str,
+    member_id: i32,
+    corporation_id: i32,
+    alliance_id: i32
+) -> Result<InsertResult<problem::ActiveModel>, DbErr> {
+    let problem = problem::ActiveModel {
+        name: ActiveValue::Set(name.to_owned()),
+        member_id: ActiveValue::Set(member_id),
+        corporation_id: ActiveValue::Set(corporation_id),
+        alliance_id: ActiveValue::Set(alliance_id),
+        ..Default::default()
+    };
+    Problem::insert(problem).exec(db).await
+}
+
+pub async fn new_outpost(
+    db: &DatabaseConnection,
+    name: &str,
+    system: &str,
+    planets: i32,
+    arrays: i32,
+    capsuleer_id: i32,
+    problem_id: i32
+) -> Result<InsertResult<outpost::ActiveModel>, DbErr> {
+    let outpost = outpost::ActiveModel {
+        name: ActiveValue::Set(name.to_owned()),
+        system: ActiveValue::Set(system.to_owned()),
+        planets: ActiveValue::Set(planets),
+        arrays: ActiveValue::Set(arrays),
+        capsuleer_id: ActiveValue::Set(capsuleer_id),
+        problem_id: ActiveValue::Set(problem_id),
+        ..Default::default()
+    };
+    Outpost::insert(outpost).exec(db).await
+}

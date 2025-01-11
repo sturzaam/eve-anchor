@@ -3,7 +3,9 @@
 pub mod prelude;
 
 pub mod alliance;
-pub mod corporation;
 pub mod capsuleer;
+pub mod corporation;
 pub mod member;
+pub mod outpost;
+pub mod problem;
 pub mod skill;
