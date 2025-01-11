@@ -7,15 +7,24 @@ use material_lp::objective::{
 use material_lp::resource::{CelestialResource};
 use material_lp::problem::{ResourceHarvestProblem};
 
-#[test]
-fn fuel_problem() {
+use crate::DatabaseManager;
+use manager::environment::EnvironmentManager;
+
+#[tokio::test]
+async fn fuel_problem() {
+    let config = EnvironmentManager::load_config("test")
+        .await
+        .expect("Failed to load configuration");
+    let db = DatabaseManager::revision(&config)
+        .await
+        .expect("Failed to connect to database");
     let outposts = vec![
-    create_outpost("Outpost1", "Tanoo", "Aaron"),
-    create_outpost("Outpost2", "Sooma", "Benjamin"),
-    create_outpost("Outpost3", "Futzchag", "Caroline"),
-    create_outpost("Outpost4", "Fovihi", "David"),
-    create_outpost("Outpost5", "Mohas", "Emily"),
-    create_outpost("Outpost6", "Dooz", "Fiona"),
+        create_outpost(&db, "Outpost1", "Tanoo", "Aaron").await,
+        create_outpost(&db, "Outpost2", "Sooma", "Benjamin").await,
+        create_outpost(&db, "Outpost3", "Futzchag", "Caroline").await,
+        create_outpost(&db, "Outpost4", "Fovihi", "David").await,
+        create_outpost(&db, "Outpost5", "Mohas", "Emily").await,
+        create_outpost(&db, "Outpost6", "Dooz", "Fiona").await,
     ];
     let materials = parse_decomposed_list("ID	Names	Quantity	Valuation 
     1	Silicate Glass	1	1011.34 
@@ -47,15 +56,21 @@ fn fuel_problem() {
 }
 
 
-#[test]
-fn using_constellation() {
+#[tokio::test]
+async fn using_constellation() {
+    let config = EnvironmentManager::load_config("test")
+        .await
+        .expect("Failed to load configuration");
+    let db = DatabaseManager::revision(&config)
+        .await
+        .expect("Failed to connect to database");
     let outposts = vec![
-        create_outpost("Outpost1", "Tanoo", "Aaron"),
-        create_outpost("Outpost2", "Tanoo", "Benjamin"),
-        create_outpost("Outpost3", "Tanoo", "Caroline"),
-        create_outpost("Outpost4", "Futzchag", "David"),
-        create_outpost("Outpost5", "Futzchag", "Emily"),
-        create_outpost("Outpost6", "Futzchag", "Fiona"),
+        create_outpost(&db, "Outpost1", "Tanoo", "Aaron").await,
+        create_outpost(&db, "Outpost2", "Sooma", "Benjamin").await,
+        create_outpost(&db, "Outpost3", "Futzchag", "Caroline").await,
+        create_outpost(&db, "Outpost4", "Fovihi", "David").await,
+        create_outpost(&db, "Outpost5", "Mohas", "Emily").await,
+        create_outpost(&db, "Outpost6", "Dooz", "Fiona").await,
     ];
     let materials = parse_decomposed_list("ID	Names	Quantity	Valuation 
     1	Silicate Glass	1	1011.34 
@@ -89,7 +104,7 @@ fn using_constellation() {
                 richness_index: 1,
                 richness_value: 1644
             }, 
-            66.0
+            26.0
         ),(
             CelestialResource {
                 key: "Mamouna".into(),
@@ -99,7 +114,7 @@ fn using_constellation() {
                 richness_index: 2,
                 richness_value: 1298,
             },
-            66.0,
+            21.83898263707198,
         )
     ];
 

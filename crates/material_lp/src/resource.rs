@@ -1,8 +1,10 @@
 mod resource {
 
     use serde::{Deserialize, Serialize};
-    use crate::manager::Outpost;
-    use crate::data::{slice_celestials, get_constellation, PLANETS};
+    use manager::entities::outpost;
+
+
+    use crate::data::{slice_celestials, get_constellation, find_constellation_by_system, PLANETS};
 
     #[derive(Debug, Clone, PartialEq)]
     pub struct Material {
@@ -22,9 +24,10 @@ mod resource {
         pub richness_value: i64
     }
 
-    pub fn celestial_resources_by_outpost(outpost: Outpost) -> Vec<CelestialResource> {
+    pub fn celestial_resources_by_outpost(outpost: outpost::Model) -> Vec<CelestialResource> {
         let mut celestial_resources: Vec<CelestialResource> = Vec::new();
-        let celestials = slice_celestials(outpost.constellation_id).expect("Failed to slice celestials");
+        let constellation_id = find_constellation_by_system(&outpost.system).expect("Failed to find constellation by system");
+        let celestials = slice_celestials(*constellation_id).expect("Failed to slice celestials");
         let outpost_name = outpost.name;
 
         for (_, planet) in PLANETS.iter().filter(|(key, _)| celestials.contains_key(*key)) {

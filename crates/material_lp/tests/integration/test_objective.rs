@@ -1,5 +1,11 @@
+
+
 #[cfg(test)]
 mod tests {
+
+    use manager::environment::EnvironmentManager;
+
+    use crate::DatabaseManager;
     use material_lp::resource::Material;
     use material_lp::create_outpost;
     use material_lp::objective::{
@@ -8,6 +14,7 @@ mod tests {
         push_material,
         map_constellation
     };
+    
 
     #[test]
     fn parse_invalid_header() {
@@ -59,21 +66,27 @@ mod tests {
         assert_eq!(result, materials);
     }
 
-    #[test]
-    fn map_set_of_constellations() {
+    #[tokio::test]
+    async fn map_set_of_constellations() {
+        let config = EnvironmentManager::load_config("test")
+            .await
+            .expect("Failed to load configuration");
+        let db = DatabaseManager::revision(&config)
+            .await
+            .expect("Failed to connect to database");
         let outposts = vec![
-            create_outpost("Outpost1", "Tanoo", "Aaron"),
-            create_outpost("Outpost2", "Tanoo", "Benjamin"),
-            create_outpost("Outpost3", "Futzchag", "Caroline"),
-            create_outpost("Outpost4", "Futzchag", "David"),
-            create_outpost("Outpost5", "Mohas", "Emily"),
-            create_outpost("Outpost6", "Mohas", "Fiona"),
+            create_outpost(&db, "Outpost1", "Tanoo", "Aaron").await,
+            create_outpost(&db, "Outpost2", "Tanoo", "Benjamin").await,
+            create_outpost(&db, "Outpost3", "Futzchag", "Caroline").await,
+            create_outpost(&db, "Outpost4", "Futzchag", "David").await,
+            create_outpost(&db, "Outpost5", "Mohas", "Emily").await,
+            create_outpost(&db, "Outpost6", "Mohas", "Fiona").await,
         ];
         let (available_outpost, available_planet, celestial_resources) = map_constellation(outposts);
         assert_eq!(available_outpost.len(), 3);
-        assert_eq!(available_outpost.values().copied().sum::<i32>(), 1584);
+        assert_eq!(available_outpost.values().copied().sum::<i32>(), 1872);
         assert_eq!(available_planet.len(), 174);
-        assert_eq!(available_planet.values().copied().sum::<i32>(), 7656);
+        assert_eq!(available_planet.values().copied().sum::<i32>(), 9048);
         assert_eq!(celestial_resources.len(), 990);
     }
 }

@@ -10,6 +10,7 @@ mod tests {
     use manager::entities::prelude::*;
     use manager::environment::EnvironmentManager;
 
+    use crate::DatabaseManager;
     use crate::TEST_ALLIANCE_NAME;
     use crate::TEST_CAPSULEER_NAME;
     use crate::TEST_CORPORATION_NAME;
@@ -18,7 +19,6 @@ mod tests {
     use crate::TEST_PROBLEM_NAME;
     use crate::TEST_SKILL_NAME;
     use crate::TEST_SYSTEM_NAME;
-    use crate::DatabaseManager;
 
 
     #[tokio::test]
