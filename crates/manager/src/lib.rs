@@ -89,7 +89,7 @@ pub async fn new_problem(
     name: &str,
     member_id: i32,
     corporation_id: i32,
-    alliance_id: i32
+    alliance_id: Option<i32>
 ) -> Result<InsertResult<problem::ActiveModel>, DbErr> {
     let problem = problem::ActiveModel {
         name: ActiveValue::Set(name.to_owned()),
@@ -108,7 +108,7 @@ pub async fn new_outpost(
     planets: i32,
     arrays: i32,
     capsuleer_id: i32,
-    problem_id: i32
+    problem_id: Option<i32>
 ) -> Result<InsertResult<outpost::ActiveModel>, DbErr> {
     let outpost = outpost::ActiveModel {
         name: ActiveValue::Set(name.to_owned()),

@@ -170,7 +170,7 @@ mod tests {
             .await
             .expect("Failed to add member to database");
 
-        let saved_problem = new_problem(&db, TEST_PROBLEM_NAME, saved_member.last_insert_id, saved_corporation.last_insert_id, saved_alliance.last_insert_id)
+        let saved_problem = new_problem(&db, TEST_PROBLEM_NAME, saved_member.last_insert_id, saved_corporation.last_insert_id, None)
             .await
             .expect("Failed to add problem to database");
             
@@ -209,11 +209,11 @@ mod tests {
             .await
             .expect("Failed to add capsuleer to database");
 
-        let saved_problem = new_problem(&db, TEST_PROBLEM_NAME, saved_member.last_insert_id, saved_corporation.last_insert_id, saved_alliance.last_insert_id)
+        let saved_problem = new_problem(&db, TEST_PROBLEM_NAME, saved_member.last_insert_id, saved_corporation.last_insert_id, None)
             .await
             .expect("Failed to add problem to database");
 
-        let saved_outpost = new_outpost(&db, TEST_OUTPOST_NAME, TEST_SYSTEM_NAME, 12, 26, saved_capsuleer.last_insert_id, saved_problem.last_insert_id)
+        let saved_outpost = new_outpost(&db, TEST_OUTPOST_NAME, TEST_SYSTEM_NAME, 12, 26, saved_capsuleer.last_insert_id, Some(saved_problem.last_insert_id))
             .await
             .expect("Failed to add outpost to database");   
 
@@ -227,5 +227,65 @@ mod tests {
         assert_eq!(retrieved_outpost.system, TEST_SYSTEM_NAME);
         assert_eq!(retrieved_outpost.planets, 12);
         assert_eq!(retrieved_outpost.arrays, 26);
+    }
+
+    #[tokio::test]
+    async fn test_add_outpost_to_problem() {
+
+        let config = EnvironmentManager::load_config("test")
+            .await
+            .expect("Failed to load configuration");
+        let db = DatabaseManager::revision(&config)
+            .await
+            .expect("Failed to connect to database");
+
+        let saved_alliance = new_alliance(&db, TEST_ALLIANCE_NAME)
+            .await
+            .expect("Failed to add alliance to database");
+
+        let saved_corporation = new_corporation(&db, TEST_CORPORATION_NAME, saved_alliance.last_insert_id)
+            .await
+            .expect("Failed to add corporation to database");
+        
+        let saved_member = new_member(&db, TEST_MEMBER_NAME, saved_corporation.last_insert_id)
+            .await
+            .expect("Failed to add member to database");
+
+        let saved_capsuleer = new_capsuleer(&db, TEST_CAPSULEER_NAME, saved_member.last_insert_id, saved_corporation.last_insert_id)
+            .await
+            .expect("Failed to add capsuleer to database");
+
+        let saved_outpost = new_outpost(&db, TEST_OUTPOST_NAME, TEST_SYSTEM_NAME, 12, 26, saved_capsuleer.last_insert_id, None)
+            .await
+            .expect("Failed to add outpost to database");
+        
+        let saved_problem = new_problem(&db, TEST_PROBLEM_NAME, saved_member.last_insert_id, saved_corporation.last_insert_id, None)
+            .await
+            .expect("Failed to add problem to database");
+
+        let retrieved_outpost = Outpost::find_by_name(TEST_OUTPOST_NAME, &db)
+            .await
+            .unwrap()
+            .unwrap();
+        
+        let mut active_outpost: outpost::ActiveModel = retrieved_outpost.into();
+        active_outpost.problem_id = ActiveValue::Set(Some(saved_problem.last_insert_id));
+        let _ = active_outpost
+            .update(&db)
+            .await
+            .expect("Failed to update outpost");
+
+        let retrieved_outpost: outpost::Model = Outpost::find_by_name(TEST_OUTPOST_NAME, &db)
+            .await
+            .unwrap()
+            .unwrap();
+
+        
+        assert_eq!(retrieved_outpost.id, saved_outpost.last_insert_id);
+        assert_eq!(retrieved_outpost.name, TEST_OUTPOST_NAME);
+        assert_eq!(retrieved_outpost.system, TEST_SYSTEM_NAME);
+        assert_eq!(retrieved_outpost.planets, 12);
+        assert_eq!(retrieved_outpost.arrays, 26);
+        assert_eq!(retrieved_outpost.problem_id, Some(saved_problem.last_insert_id));
     }
 }

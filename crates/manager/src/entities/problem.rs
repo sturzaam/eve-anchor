@@ -9,7 +9,7 @@ pub struct Model {
     pub active: bool,
     pub member_id: i32,
     pub corporation_id: i32,
-    pub alliance_id: i32,
+    pub alliance_id: Option<i32>
 }
 
 impl Model {

@@ -1,4 +1,3 @@
-
 use sea_orm::entity::prelude::*;
 use serde::Deserialize;
 
@@ -12,7 +11,7 @@ pub struct Model {
     pub planets: i32,
     pub arrays: i32,
     pub capsuleer_id: i32,
-    pub problem_id: i32,
+    pub problem_id: Option<i32>
 }
 
 impl Model {

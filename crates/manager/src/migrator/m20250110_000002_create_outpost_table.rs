@@ -37,7 +37,7 @@ impl MigrationTrait for Migration {
                             .from(Outpost::Table, Outpost::CapsuleerId)
                             .to(Capsuleer::Table, Capsuleer::Id),
                     )
-                    .col(ColumnDef::new(Outpost::ProblemId).integer().not_null())
+                    .col(ColumnDef::new(Outpost::ProblemId).integer())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-problem-outpost_id")

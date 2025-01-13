@@ -23,10 +23,28 @@ impl EventHandler for Handler {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::Command(command) = interaction {
             let content = match command.data.name.as_str() {
-                // "skill" => Some(commands::ping::run(&command.data.options())),
-                "member" => Some(commands::member::run(&command.data.options(), &self.db).await),
+                "corporation" => {
+                    commands::corporation::run(&ctx, &command, &self.db).await.unwrap();
+                    None
+                },
+                "member" => {
+                    commands::member::run(&ctx, &command, &self.db).await.unwrap();
+                    None
+                },
                 "capsuleer" => {
                     commands::capsuleer::run(&ctx, &command, &self.db).await.unwrap();
+                    None
+                },
+                "outpost" => {
+                    commands::outpost::run(&ctx, &command, &self.db).await.unwrap();
+                    None
+                },
+                "problem" => {
+                    commands::problem::run(&ctx, &command, &self.db).await.unwrap();
+                    None
+                }
+                "problem_outpost" => {
+                    commands::problem_outpost::run(&ctx, &command, &self.db).await.unwrap();
                     None
                 },
                 _ => Some("not implemented.".to_string()),
@@ -52,20 +70,16 @@ impl EventHandler for Handler {
                 .expect("GUILD_ID must be a valid u64"),
         );
 
-        let commands = guild_id
+        let _ = guild_id
             .set_commands(&ctx.http, vec![
+                commands::corporation::register(),
                 commands::member::register(),
                 commands::capsuleer::register(),
+                commands::outpost::register(),
+                commands::problem::register(),
+                commands::problem_outpost::register(),
             ])
             .await;
-
-        println!("Registered the following guild slash commands: {commands:#?}");
-
-        // let guild_command =
-        //     Command::create_global_command(&ctx.http, commands::wonderful_command::register())
-        //         .await;
-
-        // println!("I created the following global slash command: {guild_command:#?}");
     }
 }
 

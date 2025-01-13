@@ -17,7 +17,7 @@ impl MigrationTrait for Migration {
             .alter_table(
                 Table::alter()
                 .table(Member::Table)
-                .add_column(ColumnDef::new(Member::CorporationId).integer().not_null())
+                .add_column(ColumnDef::new(Member::CorporationId).integer())
                 .add_foreign_key(
                     TableForeignKey::new()
                         .name("fk-corporation-member_id")

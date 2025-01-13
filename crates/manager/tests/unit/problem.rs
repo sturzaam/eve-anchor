@@ -11,7 +11,7 @@ fn test_create_problem() {
         active: true,
         member_id: 1,
         corporation_id: 1,
-        alliance_id: 1,
+        alliance_id: None,
     };
     
     assert_eq!(problem.name, TEST_PROBLEM_NAME);

@@ -17,7 +17,7 @@ impl MigrationTrait for Migration {
             .alter_table(
                 Table::alter()
                     .table(Capsuleer::Table)
-                    .add_column(ColumnDef::new(Capsuleer::CorporationId).integer().not_null())
+                    .add_column(ColumnDef::new(Capsuleer::CorporationId).integer())
                     .add_foreign_key(
                         TableForeignKey::new()
                             .name("fk-corporation-capsuleer_id")
