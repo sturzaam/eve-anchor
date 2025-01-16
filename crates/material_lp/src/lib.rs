@@ -41,10 +41,10 @@ pub async fn create_outpost(
     let capsuleer = new_capsuleer(&db, capsuleer_name, member.last_insert_id, corporation.last_insert_id)
         .await
         .expect("Failed to add capsuleer to database");
-    let problem = new_problem(&db, "Fortizar", member.last_insert_id, corporation.last_insert_id, alliance.last_insert_id)
+    let problem = new_problem(&db, "Fortizar", vec![], member.last_insert_id, corporation.last_insert_id, Some(alliance.last_insert_id))
         .await
         .expect("Failed to add problem to database");
-    let _outpost = new_outpost(&db, outpost_name, outpost_system, 12, 26, capsuleer.last_insert_id, problem.last_insert_id)
+    let _outpost = new_outpost(&db, outpost_name, outpost_system, 12, 26, capsuleer.last_insert_id, Some(problem.last_insert_id))
         .await
         .expect("Failed to add outpost to database");
     Outpost::find_by_name(outpost_name, &db)

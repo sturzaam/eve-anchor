@@ -8,6 +8,7 @@ fn test_create_problem() {
     let problem = problem::Model {
         id: 1,
         name: TEST_PROBLEM_NAME.to_string(),
+        constraint: vec![],
         active: true,
         member_id: 1,
         corporation_id: 1,

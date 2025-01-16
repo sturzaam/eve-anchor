@@ -1,6 +1,7 @@
 // src/main.rs
 
 mod commands;
+mod report;
 
 use dotenv::dotenv;
 
@@ -47,6 +48,10 @@ impl EventHandler for Handler {
                     commands::problem_outpost::run(&ctx, &command, &self.db).await.unwrap();
                     None
                 },
+                "solve_problem" => {
+                    commands::solve_problem::run(&ctx, &command, &self.db).await.unwrap();
+                    None
+                },
                 _ => Some("not implemented.".to_string()),
             };
 
@@ -78,6 +83,7 @@ impl EventHandler for Handler {
                 commands::outpost::register(),
                 commands::problem::register(),
                 commands::problem_outpost::register(),
+                commands::solve_problem::register(),
             ])
             .await;
     }

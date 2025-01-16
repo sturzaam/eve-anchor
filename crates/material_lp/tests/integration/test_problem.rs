@@ -7,8 +7,12 @@ use material_lp::objective::{
 use material_lp::resource::{CelestialResource};
 use material_lp::problem::{ResourceHarvestProblem};
 
-use crate::DatabaseManager;
+use manager::*;
+use manager::entities::*;
+use manager::entities::prelude::*;
 use manager::environment::EnvironmentManager;
+
+use crate::DatabaseManager;
 
 #[tokio::test]
 async fn fuel_problem() {
@@ -26,7 +30,10 @@ async fn fuel_problem() {
         create_outpost(&db, "Outpost5", "Mohas", "Emily").await,
         create_outpost(&db, "Outpost6", "Dooz", "Fiona").await,
     ];
-    let materials = parse_decomposed_list("ID	Names	Quantity	Valuation 
+    let _ = new_problem(
+        &db,
+        "Fuel",
+        "ID	Names	Quantity	Valuation 
     1	Silicate Glass	1	1011.34 
     2	Smartfab Units	1	418.3 
     3	Liquid Ozone	1	166.13 
@@ -39,7 +46,21 @@ async fn fuel_problem() {
     10	Condensates	1	346.7 
     11	Construction Blocks	1	381.78 
     12	Nanites	1	1448.58 
-    ").unwrap();
+    ".into(),
+        1,
+        1,
+        None
+    )
+        .await
+        .expect("Failed to add problem to database");
+    let retrieved_problem: problem::Model = Problem::find_by_name("Fuel", &db)
+        .await
+        .unwrap()
+        .unwrap();
+
+    let constraint = std::str::from_utf8(&retrieved_problem.constraint)
+        .expect("Failed to convert constraint to string");
+    let materials = parse_decomposed_list(constraint).unwrap();
     let (minimum_output, value) = map_objective(materials);
     let outpost_count = outposts.len() as f64;
     let (available_key, available_planet, _celestial_resources) = map_constellation(outposts);

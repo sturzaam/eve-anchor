@@ -1,11 +1,14 @@
 use sea_orm::entity::prelude::*;
 
+use crate::outpost;
+
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
 #[sea_orm(table_name = "problem")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub name: String,
+    pub constraint: Vec<u8>,
     pub active: bool,
     pub member_id: i32,
     pub corporation_id: i32,
@@ -79,6 +82,15 @@ impl Entity {
         Entity::find()
             .filter(Column::Name.eq(name))
             .one(db)
+            .await
+            .map_err(|e| e.into())
+    }
+
+    pub async fn find_outposts_by_name(name: &str, db: &DatabaseConnection) -> Result<Vec<(Model, Option<outpost::Model>)>, sea_orm::DbErr> {
+        Entity::find()
+            .filter(Column::Name.eq(name))
+            .find_also_related(outpost::Entity)
+            .all(db)
             .await
             .map_err(|e| e.into())
     }

@@ -9,6 +9,7 @@ mod m20250109_000003_alter_member_table;
 mod m20250109_000004_alter_capsuleer_table;
 mod m20250110_000001_create_problem_table;
 mod m20250110_000002_create_outpost_table;
+mod m20250114_000001_alter_problem_table;
 
 pub struct Migrator;
 
@@ -25,6 +26,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20250109_000004_alter_capsuleer_table::Migration),
             Box::new(m20250110_000001_create_problem_table::Migration),
             Box::new(m20250110_000002_create_outpost_table::Migration),
+            Box::new(m20250114_000001_alter_problem_table::Migration),
         ]
     }
 }

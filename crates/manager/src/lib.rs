@@ -87,12 +87,14 @@ pub async fn new_skill(
 pub async fn new_problem(
     db: &DatabaseConnection,
     name: &str,
+    constraint: Vec<u8>,
     member_id: i32,
     corporation_id: i32,
     alliance_id: Option<i32>
 ) -> Result<InsertResult<problem::ActiveModel>, DbErr> {
     let problem = problem::ActiveModel {
         name: ActiveValue::Set(name.to_owned()),
+        constraint: ActiveValue::Set(constraint),
         member_id: ActiveValue::Set(member_id),
         corporation_id: ActiveValue::Set(corporation_id),
         alliance_id: ActiveValue::Set(alliance_id),

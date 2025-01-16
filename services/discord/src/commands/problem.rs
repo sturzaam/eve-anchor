@@ -23,12 +23,13 @@ pub async fn run(
         let modal = CreateQuickModal::new("Problem")
             .timeout(std::time::Duration::from_secs(600))
             .short_field("Corporation Name")
-            .short_field("Problem Name");
+            .short_field("Problem Name")
+            .paragraph_field("Material List Exported from Eve Echoes");
         let response = interaction.quick_modal(ctx, modal).await?.unwrap();
 
         let inputs = response.inputs;
-        let (corporation_name, problem_name)
-          = (&inputs[0], &inputs[1]);
+        let (corporation_name, problem_name, constraints)
+          = (&inputs[0], &inputs[1], &inputs[2]);
 
         let db = db as &DatabaseConnection;
         let member = Member::find_by_name(&user.tag(), &db)
@@ -39,7 +40,7 @@ pub async fn run(
         if let Some(corporation) = Corporation::find_by_name(corporation_name, &db)
             .await
             .unwrap() {
-                let _ = new_problem(&db, problem_name, member.id, corporation.id, None)
+                let _ = new_problem(&db, problem_name, constraints.to_string().into(), member.id, corporation.id, None)
                     .await
                     .expect("Failed to add problem to database");
         } else {
