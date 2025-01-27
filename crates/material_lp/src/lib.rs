@@ -1,4 +1,5 @@
 pub mod assertions;
+pub mod cache;
 pub mod data;
 pub mod objective;
 pub mod problem;
@@ -57,7 +58,14 @@ pub fn solve_for_constellation(
     outposts: Vec<outpost::Model>,
     materials: Vec<Material>,
     days: f64,
+    cache: &cache::Cache,
 ) -> Result<Vec<(CelestialResource, f64)>, String> {
+    let key = format!("{}-{}-{}", outposts.len(), materials.len(), days);
+    if let Some(result) = cache.get(&key) {
+        println!("Cache hit: {}", key);
+        return result;
+    }
+    println!("Cache miss: {}", key);
     let outpost_count = outposts.len() as f64;
     let (minimum_output, value) = map_objective(materials);
     let (available_key, available_planet, celestial_resources) = map_constellation(outposts);
@@ -84,6 +92,6 @@ pub fn solve_for_constellation(
         .zip(resource_quantities.iter().cloned())
         .map(|(resource, quantity)| (resource.clone(), quantity))
         .collect();
-
+    cache.set(key, Ok(result.clone()));
     Ok(result)
 }

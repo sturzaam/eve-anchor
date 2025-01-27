@@ -2,20 +2,11 @@ use prettytable::{Table, Row, Cell, format::Alignment, format::FormatBuilder,row
 use std::cmp::Ordering;
 use material_lp::data::{get_celestial, system_by_planet, get_item};
 use material_lp::resource::{Material, CelestialResource}; 
-use manager::entities::outpost;
 
 pub struct SolutionTable {
     pub celestial: String,
     pub resource: Box<str>,
     pub arrays: f64,
-}
-
-pub struct OutpostTable {
-    pub outpost_name: Box<str>,
-    pub capsuleer_name: Box<str>,
-    pub system: Box<str>,
-    pub planets: Box<str>,
-    pub arrays: Box<str>,
 }
 
 pub fn solution_table(key: String, values: Vec<(CelestialResource, f64)>) -> String {
@@ -109,72 +100,6 @@ pub fn material_table(requirements: Vec<Material>) -> String {
             Cell::new_align(&format_value(material.valuation), Alignment::RIGHT),
         ]));
     }
-    let table_string = table.to_string();
-    let formatted_output = match table_string.get(..1999) {
-        Some(substring) => format!("```\n{}\n```", substring),
-        None => format!("```\n{}\n```", table_string),
-    };
-    formatted_output
-}
-
-pub fn outpost_table(values: Vec<outpost::Model>) -> String {
-    let mut outpost_table: Vec<OutpostTable> = Vec::new();
-
-    for outpost in values.iter() {
-        let moved_outpost = outpost.clone();
-        outpost_table.push(
-            OutpostTable {
-                outpost_name: moved_outpost
-                    .name
-                    .into(),
-                capsuleer_name: moved_outpost
-                    .capsuleer_id
-                    .to_string()
-                    .into(),
-                system: moved_outpost
-                    .system
-                    .into(),
-                planets: moved_outpost
-                    .planets
-                    .to_string()
-                    .into(),
-                arrays: moved_outpost
-                    .arrays
-                    .to_string()
-                    .into(),
-            }
-        );
-    }
-
-
-    outpost_table.sort_by(|a, b| a.system.cmp(&b.system));
-    
-    
-    let mut table = Table::new();
-    table.set_format(
-        FormatBuilder::new()
-            .column_separator(' ')
-            .padding(0, 0)
-            .build()
-    );
-    table.add_row(Row::new(vec![
-        Cell::new("Outpost").style_spec("bFg"),
-        Cell::new("Capsuleer").style_spec("bFg"),
-        Cell::new("System").style_spec("bFg"),
-        // Cell::new("Planets").style_spec("bFg"),
-        // Cell::new("Arrays").style_spec("bFg"),
-    ]));
-
-    for item in outpost_table {
-        table.add_row(Row::new(vec![
-            Cell::new(&item.outpost_name),
-            Cell::new(&item.capsuleer_name),
-            Cell::new(&item.system),
-            // Cell::new(&item.planets),
-            // Cell::new(&item.arrays),
-        ]));
-    }
-
     let table_string = table.to_string();
     let formatted_output = match table_string.get(..1999) {
         Some(substring) => format!("```\n{}\n```", substring),

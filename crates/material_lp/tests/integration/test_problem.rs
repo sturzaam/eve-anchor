@@ -6,6 +6,7 @@ use material_lp::objective::{
 };
 use material_lp::resource::{CelestialResource};
 use material_lp::problem::{ResourceHarvestProblem};
+use material_lp::cache;
 
 use manager::*;
 use manager::entities::*;
@@ -107,8 +108,9 @@ async fn using_constellation() {
     11	Construction Blocks	1	381.78 
     12	Nanites	1	1448.58 
     ").unwrap();
+    let cache = cache::Cache::new(std::time::Duration::from_secs(60));
 
-    let results = match solve_for_constellation(outposts, materials, 7.) {
+    let results = match solve_for_constellation(outposts, materials, 7., &cache) {
         Ok(res) => res,
         Err(err) => {
             // Handle the error or panic with a message

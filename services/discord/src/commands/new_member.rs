@@ -92,7 +92,7 @@ pub async fn run(
     }
 
 pub fn register() -> CreateCommand {
-    CreateCommand::new("member").description("Register member with eve-anchor").add_option(
+    CreateCommand::new("new_member").description("Register member with eve-anchor").add_option(
         CreateCommandOption::new(CommandOptionType::User, "name", "The member to register")
             .required(true),
     )

@@ -1,4 +1,5 @@
 use sea_orm::entity::prelude::*;
+use sea_orm::DeleteResult;
 use serde::Deserialize;
 
 #[derive(Clone, Debug, Deserialize, PartialEq, DeriveEntityModel, Eq)]
@@ -58,10 +59,26 @@ impl Related<super::problem::Entity> for Entity {
 impl ActiveModelBehavior for ActiveModel {}
 
 impl Entity {
+    pub async fn delete_by_name(name: &str, db: &DatabaseConnection) -> Result<DeleteResult, sea_orm::DbErr> {
+        Entity::delete_many()
+            .filter(Column::Name.eq(name))
+            .exec(db)
+            .await
+            .map_err(|e| e.into())
+    }
+    
     pub async fn find_by_name(name: &str, db: &DatabaseConnection) -> Result<Option<Model>, sea_orm::DbErr> {
         Entity::find()
             .filter(Column::Name.eq(name))
             .one(db)
+            .await
+            .map_err(|e| e.into())
+    }
+
+    pub async fn find_by_capsuleer(capsuleer_id: i32, db: &DatabaseConnection) -> Result<Vec<Model>, sea_orm::DbErr> {
+        Entity::find()
+            .filter(Column::CapsuleerId.eq(capsuleer_id))
+            .all(db)
             .await
             .map_err(|e| e.into())
     }

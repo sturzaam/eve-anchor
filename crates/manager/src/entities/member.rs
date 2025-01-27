@@ -1,5 +1,7 @@
 use sea_orm::entity::prelude::*;
 
+use crate::capsuleer;
+
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
 #[sea_orm(table_name = "member")]
 pub struct Model {
@@ -49,6 +51,14 @@ impl Entity {
         Entity::find()
             .filter(Column::Name.eq(name))
             .one(db)
+            .await
+            .map_err(|e| e.into())
+    }
+    pub async fn find_capsuleer_by_name(name: &str, db: &DatabaseConnection) -> Result<Vec<(Model, Option<capsuleer::Model>)>, sea_orm::DbErr> {
+        Entity::find()
+            .filter(Column::Name.eq(name))
+            .find_also_related(capsuleer::Entity)
+            .all(db)
             .await
             .map_err(|e| e.into())
     }

@@ -1,7 +1,10 @@
-pub mod capsuleer;
-pub mod corporation;
-pub mod member;
-pub mod outpost;
-pub mod problem;
-pub mod problem_outpost;
+pub mod add_member_outpost_to_problem;
+pub mod delete_outpost;
+pub mod new_capsuleer;
+pub mod new_member;
+pub mod new_outpost;
+pub mod new_problem;
 pub mod solve_problem;
+pub mod list_outpost;
+pub mod list_problem;
+pub mod list_problem_material;
