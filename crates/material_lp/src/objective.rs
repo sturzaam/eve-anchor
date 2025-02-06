@@ -1,13 +1,16 @@
 mod objective {
     use std::collections::HashMap;
+    use manager::entities::outpost;
+
     use crate::problem::{Value};
     use crate::data::{
         PLANETS,
         find_item,
-        slice_celestials
+        slice_celestials,
+        get_constellation
     };
-    use crate::resource::{Material, CelestialResource, celestial_resources_by_outpost};
-    use crate::structure::Outpost;
+    use crate::resource::{Material, CelestialResource, celestial_resources_by_constellation};
+    use crate::data::find_constellation_by_system;
     
     pub fn map_objective(materials: Vec<Material>) -> (HashMap<i64, f64>, Value) {
         let mut minimum_output: HashMap<i64, f64> = HashMap::new();
@@ -126,23 +129,23 @@ mod objective {
         (minimum_output, value)
     }
     
-    pub fn map_outpost(outposts: Vec<Outpost>) -> (HashMap<String, f64>, HashMap<i64, f64>, Vec<CelestialResource>) {
-        let mut available_outpost: HashMap<String, f64> = HashMap::new();
-        let mut available_planet: HashMap<i64, f64> = HashMap::new();
+    pub fn map_constellation(outposts: Vec<outpost::Model>) -> (HashMap<String, i32>, HashMap<i64, i32>, Vec<CelestialResource>) {
+        let mut available_constellation: HashMap<String, i32> = HashMap::new();
+        let mut available_planet: HashMap<i64, i32> = HashMap::new();
         let mut available_celestial_resource: Vec<CelestialResource> = Vec::new();
         
         for outpost in outposts {
-            let available_planets = 12.; //TODO: derive from capsuleer
-            let available_array = 22.; //TODO: derive from capsuleer
-    
-            let outpost_name = outpost.name.clone();
-            match available_planets_by_outpost(outpost.clone(), available_array) {
+            let constellation_id = find_constellation_by_system(&outpost.system).expect("Failed to find constellation by system");
+            let constellation = get_constellation(*constellation_id);
+            match available_planets_by_outpost(outpost.clone(), outpost.arrays) {
                 Ok(planets) => {
-                    *available_outpost
-                        .entry(outpost_name) // Use the cloned name
-                        .or_insert(available_array * available_planets) = available_array * available_planets;
-                    available_planet.extend(planets);
-                    available_celestial_resource.extend(celestial_resources_by_outpost(outpost))
+                    *available_constellation
+                        .entry(constellation.unwrap().en_name.to_string())
+                        .or_insert(0) += outpost.arrays * outpost.planets;
+                    for (key, _value) in planets {
+                        *available_planet.entry(key).or_insert(0) += outpost.arrays;
+                    }
+                    available_celestial_resource.extend(celestial_resources_by_constellation(*constellation_id))
                 }
                 Err(err) => {
                     println!("Error: {}", err);
@@ -150,7 +153,7 @@ mod objective {
             }
         }
         
-        (available_outpost, available_planet, available_celestial_resource)
+        (available_constellation, available_planet, available_celestial_resource)
     }
     
     pub fn push_material(line: &str, materials: &mut Vec<Material>) {
@@ -185,12 +188,13 @@ mod objective {
         Ok(materials)
     }
 
-    pub fn available_planets_by_outpost(outpost: Outpost, number: f64) -> Result<HashMap<i64, f64>, Box<dyn std::error::Error>> {
-        let celestials = slice_celestials(outpost.constellation_id).expect("Failed to slice celestials");
-        let available_planets: HashMap<i64, f64> = PLANETS
+    pub fn available_planets_by_outpost(outpost: outpost::Model, number: i32) -> Result<HashMap<i64, i32>, Box<dyn std::error::Error>> {
+        let constellation_id = find_constellation_by_system(&outpost.system).expect("Failed to find constellation by system");
+        let celestials = slice_celestials(*constellation_id).expect("Failed to slice celestials");
+        let available_planets: HashMap<i64, i32> = PLANETS
             .iter()
             .filter(|(key, _)| celestials.contains_key(*key))
-            .map(|(key, _)| (*key, number)) //TODO: derive from capsuleer
+            .map(|(key, _)| (*key, number))
             .collect();
 
         Ok(available_planets)
@@ -198,4 +202,4 @@ mod objective {
 }
 
 
-pub use objective::{map_objective, map_outpost, parse_decomposed_list, push_material};
+pub use objective::{map_objective, map_constellation, parse_decomposed_list, push_material};

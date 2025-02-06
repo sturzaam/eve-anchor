@@ -1,36 +1,23 @@
 use std::fs;
-use std::fs::File;
-use std::io::copy;
 use std::path::PathBuf;
-use reqwest::Url;
+use std::process::Command;
 
 fn main() {
-    let out_dir = "./target".to_string();
-    let out_dir = PathBuf::from(out_dir);
-    let auxilus_view = "https://auxilus.xyz/eve-echoes-data/download?view=/eve-echoes-data/";
-    let data = vec![
-        "all_items_info.json",
-        "celestials.json",
-        "constellations_r.json",
-        "planet_exploit_resource.json",
-        "systems_r.json",
-    ];
-    let data_dir = out_dir.join("data");
+    let target = PathBuf::from("target");
 
-    fs::create_dir_all(&data_dir).expect("Failed to create data directory");
+    Command::new("tar")
+        .args(&["-xzvf", "data.tar.gz", "-C", target.to_str().unwrap()])
+        .status()
+        .expect("Failed to extract tar.gz file");
 
-    for filename in data {
-        let file_url = format!("{}{}", auxilus_view, filename);
-        let file_path = out_dir.join(&filename);
-        let dest_path = data_dir.join(&filename);
-
-        if !dest_path.exists() {
-            let mut response = reqwest::blocking::get(Url::parse(&file_url).unwrap())
-                .expect("Failed to send request");
-            let mut file = File::create(&file_path).expect("Failed to create file");
-
-            copy(&mut response, &mut file).expect("Failed to download file");
-            fs::rename(&file_path, &dest_path).expect("Failed to move file to data directory");
+    for entry in fs::read_dir("target/data").unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) == Some("gz") {
+            Command::new("gunzip")
+                .arg(path.to_str().unwrap())
+                .status()
+                .expect("Failed to unzip file");
         }
     }
 }

@@ -1,91 +1,76 @@
 pub mod assertions;
+pub mod cache;
 pub mod data;
 pub mod objective;
 pub mod problem;
 pub mod resource;
-pub mod solution;
-pub mod structure;
 
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{Read};
-use std::path::Path;
 use good_lp::solvers::Solution;
 
-use objective::{map_outpost, map_objective};
-use problem::ResourceHarvestProblem;
+use objective::{map_objective, map_constellation};
+use problem::{ResourceHarvestProblem};
 use resource::{Material, CelestialResource};
-use structure::{Capsuleer, Outpost, Corporation, Alliance};
+use manager::database::DatabaseConnection;
+use manager::entities::outpost;
+use manager::entities::prelude::*;
+use manager::*;
 
-pub fn load_outposts(file_path: &Path) -> Result<Vec<(String, i32)>, anyhow::Error> {
+pub fn outposts_per_constellation(outposts: &Vec<outpost::Model>) -> Result<Vec<(String, i32)>, anyhow::Error> {
     let mut outpost_counts: HashMap<String, i32> = HashMap::new();
-    if file_path.exists() {
-        let mut file = File::open(file_path).expect(&format!("Failed to open: {}", file_path.display()));
-        let mut corporation_data = Vec::new();
-        file.read_to_end(&mut corporation_data).expect(&format!("Failed to read: {}", file_path.display()));
-        let corporation: Corporation = bincode::deserialize(&corporation_data).expect(&format!("Failed to deserialize: {}", file_path.display()));
-        
-        for outpost in &corporation.outposts {
-            *outpost_counts.entry(outpost.name.to_string()).or_insert(0) += 1;
-        }
+    for outpost in outposts {
+        *outpost_counts.entry(outpost.name.to_string()).or_insert(0) += 1;
     }
-
     Ok(outpost_counts.into_iter().collect())
 }
 
-pub fn create_outpost(
+pub async fn create_outpost(
+    db: &DatabaseConnection,
     outpost_name: &str,
     outpost_system: &str,
     capsuleer_name: &str,
-    corporation_name: &str,
-    alliance_name: &str,
-    key: &str,
-) -> Outpost {
-    Outpost::new(
-        outpost_name.to_string(),
-        create_capsuleer(capsuleer_name, corporation_name, alliance_name),
-        outpost_system.to_string(),
-        key.to_string(),
-    ).unwrap()
+) -> outpost::Model {
+    let alliance = new_alliance(&db, "KEN")
+        .await
+        .expect("Failed to add alliance to database");
+    let corporation = new_corporation(&db, "REEF", alliance.last_insert_id)
+        .await
+        .expect("Failed to add corporation to database");
+    let member = new_member(&db, "eve-anchor", corporation.last_insert_id)
+        .await
+        .expect("Failed to add member to database");
+    let capsuleer = new_capsuleer(&db, capsuleer_name, member.last_insert_id, corporation.last_insert_id)
+        .await
+        .expect("Failed to add capsuleer to database");
+    let problem = new_problem(&db, "Fortizar", vec![], member.last_insert_id, corporation.last_insert_id, Some(alliance.last_insert_id))
+        .await
+        .expect("Failed to add problem to database");
+    let _outpost = new_outpost(&db, outpost_name, outpost_system, 12, 26, capsuleer.last_insert_id, Some(problem.last_insert_id))
+        .await
+        .expect("Failed to add outpost to database");
+    Outpost::find_by_name(outpost_name, &db)
+        .await
+        .unwrap()
+        .unwrap()
 }
 
-pub fn create_capsuleer(
-    capsuleer_name: &str,
-    corporation_name: &str,
-    alliance_name: &str,
-) -> Capsuleer {
-    Capsuleer::new(
-        capsuleer_name.to_string(),
-        create_corporation(corporation_name, alliance_name),
-        -1,
-        20,
-        4
-    )
-}
-
-pub fn create_corporation(
-    corporation_name: &str,
-    alliance_name: &str
-) -> Corporation {
-    Corporation {
-        name: corporation_name.to_string(),
-        alliance: create_alliance(alliance_name),
-        outposts: vec![],
+pub fn solve_for_constellation(
+    outposts: Vec<outpost::Model>,
+    materials: Vec<Material>,
+    days: f64,
+    cache: &cache::Cache,
+) -> Result<Vec<(CelestialResource, f64)>, String> {
+    let key = format!("{}-{}-{}", outposts.len(), materials.len(), days);
+    if let Some(result) = cache.get(&key) {
+        println!("Cache hit: {}", key);
+        return result;
     }
-}
-
-pub fn create_alliance(alliance_name: &str) -> Alliance {
-    Alliance {
-        name: alliance_name.to_string(),
-        corporations: vec![],
-    }
-}
-
-pub fn solve(outposts: Vec<Outpost>, materials: Vec<Material>, days: f64) -> Vec<(CelestialResource, f64)> {
+    println!("Cache miss: {}", key);
+    let outpost_count = outposts.len() as f64;
     let (minimum_output, value) = map_objective(materials);
-    let (available_outpost, available_planet, celestial_resources) = map_outpost(outposts);
+    let (available_key, available_planet, celestial_resources) = map_constellation(outposts);
     let mut harvest = ResourceHarvestProblem::new(
-        available_outpost,
+        available_key,
         available_planet,
         minimum_output,
         value,
@@ -96,13 +81,17 @@ pub fn solve(outposts: Vec<Outpost>, materials: Vec<Material>, days: f64) -> Vec
         .into_iter()
         .map(|r| harvest.add_resource(r))
         .collect();
-    let solution = harvest.best_production();
-    let resource_quantities: Vec<_> = variables.iter().map(|&v| solution.value(v)).collect();
+    
+    harvest.add_fuel(42002000014, 13., 18000., outpost_count);
+
+    let best_production = harvest.best_production()?;
+
+    let resource_quantities: Vec<_> = variables.iter().map(|&v| best_production.value(v)).collect();
     let result: Vec<_> = celestial_resources
         .iter()
         .zip(resource_quantities.iter().cloned())
         .map(|(resource, quantity)| (resource.clone(), quantity))
         .collect();
-    
-    result
+    cache.set(key, Ok(result.clone()));
+    Ok(result)
 }
